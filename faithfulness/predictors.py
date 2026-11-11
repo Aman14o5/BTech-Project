@@ -28,7 +28,12 @@ class T5Predictor:
 
         self.torch = torch
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = T5Tokenizer.from_pretrained(model_path)
+        try:
+            self.tokenizer = T5Tokenizer.from_pretrained(model_path)
+        except (OSError, ValueError, TypeError):
+            # checkpoint saved without tokenizer files: fine-tuning does not change the T5 vocab
+            print("No tokenizer in checkpoint; using the base t5-large tokenizer")
+            self.tokenizer = T5Tokenizer.from_pretrained("t5-large")
         self.model = T5ForConditionalGeneration.from_pretrained(model_path).to(self.device).eval()
         self.batch_size = batch_size
         self.max_new_tokens = max_new_tokens
