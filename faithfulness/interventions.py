@@ -1,21 +1,25 @@
 """Counterfactual interventions on the evidence an explanation cites.
 
-All interventions edit one side of the pair (the premise by default) and leave
-the other side untouched, so the claim being judged stays the same.
+Each intervention edits ONE side of the pair and leaves the other untouched.
+Variant keys are "<side>:<name>", e.g. "premise:remove_cited".
 
-  remove_cited     delete the cited words                -> faithful: prediction should change
-  remove_random    delete the same number of other words -> control: should change less
-  isolate_cited    keep only the cited words             -> faithful: prediction should stay
-  isolate_random   keep the same number of other words   -> control: should stay less often
-  remove_gold / isolate_gold   same, using human-highlighted words (model-independent)
+  remove_cited          delete the words the model's explanation cites
+  remove_random         control: delete the same number of other content words
+  remove_overlap        stricter control: delete the same number of non-cited words
+                        that ALSO occur in the other sentence (matches the lexical-
+                        overlap property of cited words, which random words lack)
+  isolate_cited         keep only the cited words                (premise side only)
+  isolate_random        control: keep the same number of other content words
+  remove_gold / isolate_gold / remove_gold_random
+                        the same, with human-highlighted words (model-independent)
 
-`remove_random` / `isolate_random` sample from non-cited *content* words first
-(falling back to any non-cited word), so the control is not trivially weaker
-just because it deletes stopwords.
+Expected behaviour if an explanation is faithful:
+  removing cited evidence changes the prediction MORE than removing control words;
+  keeping only the cited evidence preserves the prediction MORE than keeping control words.
 """
 import random
 
-from evidence import content_indices
+from evidence import content_indices, normalise
 
 
 def _drop(tokens, idx):
@@ -28,43 +32,62 @@ def _keep(tokens, idx):
     return " ".join(t for i, t in enumerate(tokens) if i in idx)
 
 
-def _random_like(sentence, cited, rng):
-    tokens = sentence.split()
-    k = len(cited)
-    content = [i for i in content_indices(sentence) if i not in set(cited)]
-    other = [i for i in range(len(tokens)) if i not in set(cited) and i not in set(content)]
-    if len(content) >= k:
-        return sorted(rng.sample(content, k))
-    if len(content) + len(other) >= k:
-        return sorted(content + rng.sample(other, k - len(content)))
-    return None  # not enough words to build a matched control
+def _sample_like(pool, k, rng, fallback=()):
+    """k indices from `pool` (topped up from `fallback`), or None if impossible."""
+    pool, fallback = list(pool), [i for i in fallback if i not in set(pool)]
+    if k == 0:
+        return None
+    if len(pool) >= k:
+        return sorted(rng.sample(pool, k))
+    if len(pool) + len(fallback) >= k:
+        return sorted(pool + rng.sample(fallback, k - len(pool)))
+    return None
 
 
-def build_variants(example, cited, side="premise", seed=0):
-    """Return {variant_name: (premise, hypothesis)} for one example.
+def build_variants(example, cited, side="premise", seed=0, include_gold=True):
+    """Return {"<side>:<variant>": (premise, hypothesis)} for one example.
 
-    `cited` are the model-cited indices on `side`. Variants that cannot be
-    built (no cited words, no room for a control, empty result) are omitted.
+    Variants that cannot be built (no cited words, no room for a matched
+    control, empty result) are omitted, so every metric reports its own n.
     """
-    rng = random.Random(f"{seed}-{example['id']}")
+    rng = random.Random(f"{seed}-{example['id']}-{side}")
+    other = "hypothesis" if side == "premise" else "premise"
     sent = example[side]
     tokens = sent.split()
-    gold = example[f"gold_{side}_idx"]
+    other_words = {normalise(w) for w in example[other].split()}
+    content = content_indices(sent)
+    gold = (example.get(f"gold_{side}_idx") or []) if include_gold else []
 
     def pair(new_sent):
         if not new_sent.strip():
             return None
         return (new_sent, example["hypothesis"]) if side == "premise" else (example["premise"], new_sent)
 
-    variants = {}
+    def not_in(idx):
+        s = set(idx)
+        return [i for i in content if i not in s]
+
+    allidx = range(len(tokens))
+    v = {}
     if cited:
-        variants["remove_cited"] = pair(_drop(tokens, cited))
-        variants["isolate_cited"] = pair(_keep(tokens, cited))
-        rand = _random_like(sent, cited, rng)
-        if rand is not None:
-            variants["remove_random"] = pair(_drop(tokens, rand))
-            variants["isolate_random"] = pair(_keep(tokens, rand))
+        k = len(cited)
+        v["remove_cited"] = pair(_drop(tokens, cited))
+        rand = _sample_like(not_in(cited), k, rng, [i for i in allidx if i not in set(cited)])
+        if rand:
+            v["remove_random"] = pair(_drop(tokens, rand))
+        overlap = [i for i in not_in(cited) if normalise(tokens[i]) in other_words]
+        ov = _sample_like(overlap, k, rng)  # no fallback: must be overlap words
+        if ov:
+            v["remove_overlap"] = pair(_drop(tokens, ov))
+        if side == "premise":
+            v["isolate_cited"] = pair(_keep(tokens, cited))
+            if rand:
+                v["isolate_random"] = pair(_keep(tokens, rand))
     if gold:
-        variants["remove_gold"] = pair(_drop(tokens, gold))
-        variants["isolate_gold"] = pair(_keep(tokens, gold))
-    return {k: v for k, v in variants.items() if v is not None}
+        v["remove_gold"] = pair(_drop(tokens, gold))
+        grand = _sample_like(not_in(gold), len(gold), rng, [i for i in allidx if i not in set(gold)])
+        if grand:
+            v["remove_gold_random"] = pair(_drop(tokens, grand))
+        if side == "premise":
+            v["isolate_gold"] = pair(_keep(tokens, gold))
+    return {f"{side}:{k}": p for k, p in v.items() if p is not None}
