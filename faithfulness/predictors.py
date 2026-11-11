@@ -23,9 +23,14 @@ def _split_label_explanation(text):
 
 class T5Predictor:
     def __init__(self, model_path, batch_size=32, max_new_tokens=100, device=None):
+        import os
         import torch
         from transformers import T5ForConditionalGeneration, T5Tokenizer
 
+        if not os.path.isfile(os.path.join(model_path, "config.json")):
+            raise FileNotFoundError(
+                f"No checkpoint at '{model_path}': expected a folder containing config.json and "
+                "pytorch_model.bin / model.safetensors. Check MODEL_PATH (e.g. run: !ls \"$MODEL_PATH\").")
         self.torch = torch
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         try:
