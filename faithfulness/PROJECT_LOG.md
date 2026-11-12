@@ -117,3 +117,71 @@ Times are local (IST). Commit hashes refer to branch `faithfulness-pilot` on git
 ## 2026-11-12 20:42: Model plan for the viva
 - **Design:** 2 strategies × 2 sizes = T5 · e-SNLI · {random, FastVote-k} × {nt8, nt128}. We use nt128 rather than nt512 because the research plan says "up to 128 examples".
 - **Next run:** random nt128 → `btp_results/t5_esnli_random_nt128_full`.
+
+## 2026-11-12 21:15: Full run, T5 · e-SNLI · random · nt128 (all 9,824 test pairs)
+- **Run:** `btp_results/t5_esnli_random_nt128_full`. Code version `cbedb53` (experiment code unchanged since `478dd88`). 94,680 edited inputs.
+- **Baseline:** accuracy **0.849**, macro-F1 **0.849**. Predicted labels: entailment 3,617, neutral 3,334, contradiction 2,873.
+- **Explanations cite input words:** premise 97.3%, hypothesis 97.3%.
+- **Consistency:** **0.864** [0.857, 0.871]. The human reference is 0.880.
+- **Random nt8 → random nt128** (flip-rate difference, cited minus control):
+
+  | Contrast | Label | nt8 | nt128 |
+  |---|---|---|---|
+  | Premise removal vs random | contradiction | +0.075 | **+0.343** |
+  | Premise isolation vs random | contradiction | −0.125 | **+0.370** |
+  | Premise removal vs overlap | entailment | −0.101 | **−0.058** (still significant) |
+  | Hypothesis removal vs random | entailment | +0.141 | +0.014 (≈ 0) |
+  | Gold premise removal vs random | contradiction | +0.320 | +0.381 |
+
+- **Takeaways:**
+  1. More training examples leave accuracy unchanged (0.856 → 0.849), but faithfulness and consistency improve a lot (0.633 → 0.864).
+  2. The contradiction problem largely goes away at nt128: the explanation now names almost the same evidence the model uses (cited +0.34 vs gold +0.38).
+  3. The entailment word-overlap problem remains at both sizes: a robust finding.
+
+## 2026-11-12 21:47: Full run, T5 · e-SNLI · FastVote-k · nt8 (all 9,824 test pairs)
+- **Run:** `btp_results/t5_esnli_fastvotek_nt8_full`. Code version `cbedb53`. 91,668 edited inputs.
+- **Baseline:** accuracy **0.868**, macro-F1 **0.868**. Predicted labels: entailment 3,382, neutral 3,238, contradiction 3,204.
+- **Explanations cite input words:** premise 92.5%, hypothesis 97.6%.
+- **Consistency:** **0.720** [0.712, 0.728].
+- **Three models side by side:**
+
+  | Measure | random nt8 | FastVote-k nt8 | random nt128 |
+  |---|---|---|---|
+  | Accuracy | 0.856 | 0.868 | 0.849 |
+  | Consistency | 0.633 | 0.720 | 0.864 |
+  | Contradiction, premise removal vs random | +0.075 | +0.165 | +0.343 |
+  | Contradiction, premise isolation vs random | −0.125 | +0.004 | +0.370 |
+  | Contradiction, gold premise removal vs random | +0.320 | +0.359 | +0.381 |
+  | Entailment, premise removal vs overlap | −0.101 | +0.000 | −0.058 |
+  | Entailment, hypothesis removal vs overlap | +0.002 | −0.006 | −0.017 |
+
+- **Takeaways:**
+  1. At the same size, FastVote-k gives somewhat more faithful and more consistent explanations than random selection.
+  2. More examples (nt128) helps more than the selection strategy.
+  3. Accuracy barely differs across models (0.849–0.868), while faithfulness and consistency differ a lot.
+  4. Entailment explanations are no better than overlap words in any model.
+
+## 2026-11-12 22:20: Full run, T5 · e-SNLI · FastVote-k · nt128 (all 9,824 test pairs). The 2×2 is complete.
+- **Run:** `btp_results/t5_esnli_fastvotek_nt128_full`. Code version `cbedb53`. 95,287 edited inputs.
+- **Baseline:** accuracy **0.870**, macro-F1 **0.870**. Predicted labels: entailment 3,414, neutral 3,159, contradiction 3,251.
+- **Explanations cite input words:** premise 96.4%, hypothesis 97.1%.
+- **Consistency:** **0.897** [0.892, 0.903].
+- **The four models:**
+
+  | Measure | random nt8 | FastVote-k nt8 | random nt128 | FastVote-k nt128 |
+  |---|---|---|---|---|
+  | Accuracy | 0.856 | 0.868 | 0.849 | 0.870 |
+  | Consistency | 0.633 | 0.720 | 0.864 | 0.897 |
+  | Premise removal vs random (all) | +0.201 | +0.259 | +0.236 | +0.279 |
+  | Contradiction, premise removal vs random | +0.075 | +0.165 | +0.343 | +0.270 |
+  | Contradiction, premise isolation vs random | −0.125 | +0.004 | +0.370 | +0.295 |
+  | Contradiction, gold premise removal vs random | +0.320 | +0.359 | +0.381 | +0.359 |
+  | Entailment, premise removal vs overlap | −0.101 | +0.000 | −0.058 | **+0.092** |
+  | Entailment, hypothesis removal vs overlap | +0.002 | −0.006 | −0.017 | +0.007 |
+
+- **Takeaways:**
+  1. Accuracy varies by only 2 points across the four models, while consistency varies by 26 points.
+  2. More examples matter more than the selection strategy.
+  3. FastVote-k nt128 is the best overall, and the only model whose entailment premise evidence beats overlap words.
+  4. On the hypothesis side, entailment explanations never beat overlap words in any model.
+  5. The contradiction gap closes with nt128 under both strategies.
