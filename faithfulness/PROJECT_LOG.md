@@ -185,3 +185,13 @@ Times are local (IST). Commit hashes refer to branch `faithfulness-pilot` on git
   3. FastVote-k nt128 is the best overall, and the only model whose entailment premise evidence beats overlap words.
   4. On the hypothesis side, entailment explanations never beat overlap words in any model.
   5. The contradiction gap closes with nt128 under both strategies.
+
+## 2026-11-12 22:35: Findings record written
+- Wrote a plain-language findings page for the team: https://claude.ai/artifact/Waz1vFSXtTSvMjMFU5L83v (private until shared).
+- **Contents:** the method, four-model results, six findings with real examples, the full comparison table, and status against the plan.
+- **Sources:** `btp_results/` (downloaded from Drive to the laptop), all four `summary.json` and `per_example.csv` files.
+- **Extra numbers computed from the summaries:**
+  - Consistency for neutral answers: 33% → 41% → 75% → 88% across the four models.
+  - When cited premise words are removed from entailment answers:
+    - random nt8: 44% → neutral, 26% → contradiction
+    - FastVote-k nt128: 58% → neutral, 15% → contradiction
