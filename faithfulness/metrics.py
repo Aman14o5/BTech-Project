@@ -30,7 +30,30 @@ CONTRASTS = [
     ("hypothesis removal vs overlap", "hypothesis:remove_cited", "hypothesis:remove_overlap", "necessity"),
     ("gold premise removal vs random", "premise:remove_gold", "premise:remove_gold_random", "necessity"),
     ("gold hypothesis removal vs random", "hypothesis:remove_gold", "hypothesis:remove_gold_random", "necessity"),
+    ("premise contradiction vs random", "premise:contradict_cited", "premise:contradict_random", "necessity"),
+    ("hypothesis contradiction vs random", "hypothesis:contradict_cited", "hypothesis:contradict_random", "necessity"),
 ]
+
+# Counterfactual correctness (plan, Table 2): does the prediction after an edit match the
+# behaviour expected of a faithful model (plan, Table 1)?
+#   removal      strict : entailment/contradiction prediction moves to neutral
+#                lenient: it moves away from the original label (to anything)
+#   isolation    the prediction is kept
+#   contradiction the prediction equals the label an independent NLI oracle gives the edited pair
+#                (only edits where the oracle is confident, p >= min_conf). Reported overall,
+#                on edits that SHOULD change the label (oracle label != original prediction:
+#                "follows") and on edits that should not ("stays").
+REMOVAL_KEYS = ["premise:remove_cited", "premise:remove_random", "premise:remove_overlap", "premise:remove_gold",
+                "hypothesis:remove_cited", "hypothesis:remove_random", "hypothesis:remove_overlap",
+                "hypothesis:remove_gold"]
+ISOLATION_KEYS = ["premise:isolate_cited", "premise:isolate_random", "premise:isolate_gold"]
+CONTRADICTION_KEYS = ["premise:contradict_cited", "premise:contradict_random", "premise:contradict_gold",
+                      "hypothesis:contradict_cited", "hypothesis:contradict_random", "hypothesis:contradict_gold"]
+# cited vs control, compared on the edits that should change the label (unpaired)
+FOLLOW_CONTRASTS = [("premise contradiction: follows, cited vs random", "premise:contradict_cited",
+                     "premise:contradict_random"),
+                    ("hypothesis contradiction: follows, cited vs random", "hypothesis:contradict_cited",
+                     "hypothesis:contradict_random")]
 
 
 # ---------------------------------------------------------------- statistics
@@ -63,6 +86,27 @@ def bootstrap_ci(values, n_boot=1000, seed=0, alpha=0.05):
 def _ci_dict(values, **kw):
     m, lo, hi = bootstrap_ci(values, **kw)
     return {"mean": m, "lo": lo, "hi": hi, "n": len(values)}
+
+
+def diff_ci(a, b, n_boot=1000, seed=0, alpha=0.05):
+    """mean(a) - mean(b) for two INDEPENDENT samples, with a percentile bootstrap CI."""
+    a, b = [float(x) for x in a], [float(x) for x in b]
+    if not a or not b:
+        return {"mean": None, "lo": None, "hi": None, "n": len(a), "n_control": len(b)}
+    m = _mean(a) - _mean(b)
+    try:
+        import numpy as np
+        rng = np.random.default_rng(seed)
+        A, B = np.asarray(a), np.asarray(b)
+        diffs = (A[rng.integers(0, len(A), size=(n_boot, len(A)))].mean(axis=1)
+                 - B[rng.integers(0, len(B), size=(n_boot, len(B)))].mean(axis=1))
+        lo, hi = (float(x) for x in np.quantile(diffs, [alpha / 2, 1 - alpha / 2]))
+    except ImportError:
+        rng = random.Random(seed)
+        diffs = sorted(_mean([a[rng.randrange(len(a))] for _ in a]) - _mean([b[rng.randrange(len(b))] for _ in b])
+                       for _ in range(200))
+        lo, hi = diffs[int(alpha / 2 * 200)], diffs[int((1 - alpha / 2) * 200) - 1]
+    return {"mean": m, "lo": lo, "hi": hi, "n": len(a), "n_control": len(b)}
 
 
 def accuracy_macro_f1(gold, pred):
@@ -145,7 +189,80 @@ def transitions(records, keys):
     return out
 
 
-def summarise(records, n_boot=1000):
+def _confident_oracle(r, key, min_conf):
+    o = (r.get("oracle") or {}).get(key)
+    if o is None or key not in r["variants"] or o["probs"][o["label"]] < min_conf:
+        return None
+    return o
+
+
+def counterfactual_correctness(records, n_boot=1000, min_conf=0.9):
+    out = {"removal": {}, "isolation": {}, "contradiction": {}, "contradiction_follow_contrasts": {},
+           "oracle_min_conf": min_conf}
+    for key in REMOVAL_KEYS:
+        if not any(key in r["variants"] for r in records):
+            continue
+        out["removal"][key] = {}
+        for g in ["all", "entailment", "contradiction"]:
+            rs = [r for r in records if key in r["variants"] and r["original"]["label"] != "neutral" and _in_group(r, g)]
+            new = [(r["original"]["label"], r["variants"][key]["label"]) for r in rs]
+            out["removal"][key][g] = {"strict_to_neutral": _ci_dict([float(b == "neutral") for _, b in new], n_boot=n_boot),
+                                      "lenient_moves_away": _ci_dict([float(a != b) for a, b in new], n_boot=n_boot)}
+    for key in ISOLATION_KEYS:
+        if not any(key in r["variants"] for r in records):
+            continue
+        out["isolation"][key] = {g: {"kept": _ci_dict([float(r["variants"][key]["label"] == r["original"]["label"])
+                                                       for r in records if key in r["variants"] and _in_group(r, g)],
+                                                      n_boot=n_boot)} for g in GROUPS}
+
+    follow_values = {}
+    for key in CONTRADICTION_KEYS:
+        if not any(key in r["variants"] for r in records):
+            continue
+        out["contradiction"][key] = {}
+        for g in GROUPS:
+            n_built, rows = 0, []
+            for r in records:
+                if key not in r["variants"] or not _in_group(r, g):
+                    continue
+                n_built += 1
+                o = _confident_oracle(r, key, min_conf)
+                if o is not None:
+                    rows.append((r["original"]["label"], o["label"], r["variants"][key]["label"]))
+            change = [m == o for y, o, m in rows if o != y]
+            stay = [m == y for y, o, m in rows if o == y]
+            out["contradiction"][key][g] = {
+                "n_edits": n_built,
+                "n_confident": len(rows),
+                "oracle_changes_label": _ci_dict([float(o != y) for y, o, _ in rows], n_boot=n_boot),
+                "correct": _ci_dict([float(m == o) for _, o, m in rows], n_boot=n_boot),
+                "follows_when_should_change": _ci_dict([float(x) for x in change], n_boot=n_boot),
+                "stays_when_should_stay": _ci_dict([float(x) for x in stay], n_boot=n_boot),
+            }
+            follow_values[(key, g)] = change
+    for name, a, b in FOLLOW_CONTRASTS:
+        if (a, "all") in follow_values and (b, "all") in follow_values:
+            out["contradiction_follow_contrasts"][name] = {
+                g: diff_ci(follow_values[(a, g)], follow_values[(b, g)], n_boot=n_boot) for g in GROUPS}
+    return out
+
+
+def oracle_summary(records, min_conf=0.9):
+    rs = [r for r in records if (r.get("oracle") or {}).get("original")]
+    if not rs:
+        return None
+    conf_ok = [r for r in rs if r["oracle"]["original"]["probs"][r["oracle"]["original"]["label"]] >= min_conf]
+    return {
+        "n": len(rs),
+        "accuracy_vs_gold_on_original_pairs": _mean([float(r["oracle"]["original"]["label"] == r["label"]) for r in rs]),
+        "accuracy_vs_gold_when_confident": _mean([float(r["oracle"]["original"]["label"] == r["label"]) for r in conf_ok]),
+        "share_confident": len(conf_ok) / len(rs),
+        "agreement_with_model_on_original_pairs": _mean([float(r["oracle"]["original"]["label"] == r["original"]["label"])
+                                                         for r in rs]),
+    }
+
+
+def summarise(records, n_boot=1000, oracle_min_conf=0.9):
     gold = [r["label"] for r in records]
     pred = [r["original"]["label"] for r in records]
     acc, f1 = accuracy_macro_f1(gold, pred)
@@ -179,4 +296,6 @@ def summarise(records, n_boot=1000):
         "variants": variant_stats(records, keys, n_boot),
         "contrasts": contrast_stats(records, n_boot),
         "transitions": transitions(records, keys),
+        "counterfactual_correctness": counterfactual_correctness(records, n_boot, oracle_min_conf),
+        "oracle": oracle_summary(records, oracle_min_conf),
     }

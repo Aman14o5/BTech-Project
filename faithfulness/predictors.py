@@ -107,6 +107,63 @@ class T5Predictor:
         return self._batched(pairs, self.label_batch_size, run)
 
 
+DEFAULT_ORACLE = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli"
+
+
+class NLIOracle:
+    """Independent NLI classifier that decides the EXPECTED label of an edited pair
+    (evidence contradiction). It is a different and stronger model than the one being
+    tested, it is never fine-tuned here, and its accuracy on the original e-SNLI pairs is
+    reported next to every result, so its reliability is visible.
+
+    predict(pairs) -> [{"label", "probs"}] with probs over (entailment, neutral, contradiction).
+    """
+
+    def __init__(self, model_name=DEFAULT_ORACLE, batch_size=64, device=None):
+        import torch
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+        self.torch = torch
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(self.device).eval()
+        if self.device == "cuda":
+            self.model.half()
+        self.batch_size = batch_size
+        id2label = {int(i): str(l).lower() for i, l in self.model.config.id2label.items()}
+        try:
+            self.order = [next(i for i, l in id2label.items() if l.startswith(name[:5])) for name in LABELS]
+        except StopIteration:
+            raise ValueError(f"Oracle {model_name} has labels {id2label}; expected entailment/neutral/"
+                             "contradiction. Pick a 3-way NLI model with named labels.")
+
+    def predict(self, pairs):
+        torch = self.torch
+        out = []
+        for s in range(0, len(pairs), self.batch_size):
+            batch = pairs[s:s + self.batch_size]
+            enc = self.tokenizer([p for p, _ in batch], [h for _, h in batch], return_tensors="pt",
+                                 padding=True, truncation=True, max_length=256).to(self.device)
+            with torch.no_grad():
+                probs = torch.softmax(self.model(**enc).logits.float(), dim=-1)[:, self.order].cpu().tolist()
+            for p in probs:
+                out.append({"label": LABELS[max(range(3), key=lambda i: p[i])], "probs": dict(zip(LABELS, p))})
+        return out
+
+
+class DummyOracle:
+    """Pipeline-test stand-in for NLIOracle (dry runs only; its labels mean nothing)."""
+
+    def predict(self, pairs):
+        out = []
+        for p, h in pairs:
+            label = LABELS[sum(map(ord, p + h)) % 3]
+            probs = {l: 0.05 for l in LABELS}
+            probs[label] = 0.9
+            out.append({"label": label, "probs": probs})
+        return out
+
+
 class DummyPredictor:
     """Rule-based stand-in used only to test the pipeline without a GPU/model.
     Its numbers mean nothing; never report them."""
