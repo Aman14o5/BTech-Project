@@ -1,6 +1,6 @@
 # Handoff: GP115 faithfulness project (as of 16 Nov 2026)
 
-> **Repo layout note (for Claude Code on the web):** this copy lives at the repo root. Paths below written as `btech project/...` refer to the original laptop folder. In this repo: the research plan and other PDFs are in `docs/`, the earlier results are in `btp_results/`, and the code is in `faithfulness/`. The e-SNLI CSV is not committed (over GitHub's 100 MB limit); download it from the URL in section 7.
+> **Repo layout note (for Claude Code on the web):** this copy lives at the repo root. Paths below written as `btech project/...` refer to the original laptop folder. In this repo: the research plan and other PDFs are in `docs/`, the earlier results are in `btp_results/`, and the code is in `faithfulness/`. The full e-SNLI CSV is in `data/esnli_dataset.csv.gz` (gzipped because the raw file is over 100 MB; run `gunzip -k data/esnli_dataset.csv.gz`).
 
 ## 1. The project
 - DTU B.Tech project GP115, "Faithfulness-Aware Self-Rationalization: Detecting When LLM Explanations Do Not Support Their Own Predictions". Team: Amey Parashar (the user), Aman Tyagi, Bhavya Goel. Guide: Mr. Rohit Beniwal.
