@@ -1,0 +1,13 @@
+{
+  "model_path": "/content/drive/MyDrive/random_nt128",
+  "dry_run": false,
+  "split": "test",
+  "n": null,
+  "seed": 42,
+  "batch_size": 32,
+  "label_batch_size": 128,
+  "chunk": 1024,
+  "n_boot": 1000,
+  "data_dir": "faithfulness/data",
+  "out_dir": "/content/drive/MyDrive/btp_results/t5_esnli_random_nt128_full"
+}

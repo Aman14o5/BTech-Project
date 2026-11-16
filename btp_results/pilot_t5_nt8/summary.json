@@ -1,0 +1,195 @@
+{
+  "n_examples": 300,
+  "baseline_accuracy": 0.8533333333333334,
+  "baseline_macro_f1": 0.8530092592592592,
+  "frac_with_cited_evidence": 0.95,
+  "cited_vs_gold_f1": 0.31932261209282364,
+  "cited_vs_gold_precision": 0.3552760184533584,
+  "cited_vs_gold_recall": 0.3884042749806296,
+  "interventions": {
+    "isolate_cited": {
+      "n": 285,
+      "flip_rate": 0.3368421052631579,
+      "keep_rate": 0.6631578947368422,
+      "mean_prob_drop": 0.27069604528339225
+    },
+    "isolate_gold": {
+      "n": 203,
+      "flip_rate": 0.3399014778325123,
+      "keep_rate": 0.6600985221674878,
+      "mean_prob_drop": 0.2912333922106483
+    },
+    "isolate_random": {
+      "n": 267,
+      "flip_rate": 0.4681647940074906,
+      "keep_rate": 0.5318352059925093,
+      "mean_prob_drop": 0.4152301898335581
+    },
+    "remove_cited": {
+      "n": 285,
+      "flip_rate": 0.34385964912280703,
+      "keep_rate": 0.656140350877193,
+      "mean_prob_drop": 0.30079799448887984
+    },
+    "remove_gold": {
+      "n": 202,
+      "flip_rate": 0.4405940594059406,
+      "keep_rate": 0.5594059405940595,
+      "mean_prob_drop": 0.3829814136991958
+    },
+    "remove_random": {
+      "n": 267,
+      "flip_rate": 0.13857677902621723,
+      "keep_rate": 0.8614232209737828,
+      "mean_prob_drop": 0.08910793818952864
+    }
+  },
+  "faithfulness": {
+    "evidence_sensitivity": 0.1797752808988764,
+    "sensitivity_prob": 0.18919059957329323,
+    "removal_n_paired": 267,
+    "sufficiency_gain": 0.11985018726591767,
+    "isolation_n_paired": 267
+  },
+  "by_gold_label": {
+    "entailment": {
+      "interventions": {
+        "isolate_cited": {
+          "n": 95,
+          "flip_rate": 0.42105263157894735,
+          "keep_rate": 0.5789473684210527,
+          "mean_prob_drop": 0.3606741192655806
+        },
+        "isolate_gold": {
+          "n": 95,
+          "flip_rate": 0.5894736842105263,
+          "keep_rate": 0.41052631578947374,
+          "mean_prob_drop": 0.5410956826550797
+        },
+        "isolate_random": {
+          "n": 85,
+          "flip_rate": 0.8823529411764706,
+          "keep_rate": 0.11764705882352944,
+          "mean_prob_drop": 0.8030124979888891
+        },
+        "remove_cited": {
+          "n": 95,
+          "flip_rate": 0.6526315789473685,
+          "keep_rate": 0.34736842105263155,
+          "mean_prob_drop": 0.6218421523083204
+        },
+        "remove_gold": {
+          "n": 94,
+          "flip_rate": 0.6170212765957447,
+          "keep_rate": 0.3829787234042553,
+          "mean_prob_drop": 0.5501279998370204
+        },
+        "remove_random": {
+          "n": 85,
+          "flip_rate": 0.2,
+          "keep_rate": 0.8,
+          "mean_prob_drop": 0.17300072161973837
+        }
+      },
+      "faithfulness": {
+        "evidence_sensitivity": 0.411764705882353,
+        "sensitivity_prob": 0.41416710191449113,
+        "removal_n_paired": 85,
+        "sufficiency_gain": 0.43529411764705883,
+        "isolation_n_paired": 85
+      }
+    },
+    "neutral": {
+      "interventions": {
+        "isolate_cited": {
+          "n": 93,
+          "flip_rate": 0.16129032258064516,
+          "keep_rate": 0.8387096774193549,
+          "mean_prob_drop": 0.09008417776720072
+        },
+        "isolate_random": {
+          "n": 89,
+          "flip_rate": 0.24719101123595505,
+          "keep_rate": 0.752808988764045,
+          "mean_prob_drop": 0.20480822027898643
+        },
+        "remove_cited": {
+          "n": 93,
+          "flip_rate": 0.21505376344086022,
+          "keep_rate": 0.7849462365591398,
+          "mean_prob_drop": 0.14131732079230488
+        },
+        "remove_random": {
+          "n": 89,
+          "flip_rate": 0.10112359550561797,
+          "keep_rate": 0.898876404494382,
+          "mean_prob_drop": 0.02988913588309556
+        }
+      },
+      "faithfulness": {
+        "evidence_sensitivity": 0.12359550561797752,
+        "sensitivity_prob": 0.1218083249980563,
+        "removal_n_paired": 89,
+        "sufficiency_gain": 0.0898876404494382,
+        "isolation_n_paired": 89
+      }
+    },
+    "contradiction": {
+      "interventions": {
+        "isolate_cited": {
+          "n": 97,
+          "flip_rate": 0.422680412371134,
+          "keep_rate": 0.5773195876288659,
+          "mean_prob_drop": 0.35573714477512336
+        },
+        "isolate_gold": {
+          "n": 108,
+          "flip_rate": 0.12037037037037036,
+          "keep_rate": 0.8796296296296297,
+          "mean_prob_drop": 0.07144711820860215
+        },
+        "isolate_random": {
+          "n": 93,
+          "flip_rate": 0.3010752688172043,
+          "keep_rate": 0.6989247311827957,
+          "mean_prob_drop": 0.26217706184596407
+        },
+        "remove_cited": {
+          "n": 97,
+          "flip_rate": 0.16494845360824742,
+          "keep_rate": 0.8350515463917526,
+          "mean_prob_drop": 0.13927745491088628
+        },
+        "remove_gold": {
+          "n": 108,
+          "flip_rate": 0.28703703703703703,
+          "keep_rate": 0.712962962962963,
+          "mean_prob_drop": 0.2375019776162743
+        },
+        "remove_random": {
+          "n": 93,
+          "flip_rate": 0.11827956989247312,
+          "keep_rate": 0.8817204301075269,
+          "mean_prob_drop": 0.0691034953261385
+        }
+      },
+      "faithfulness": {
+        "evidence_sensitivity": 0.021505376344086002,
+        "sensitivity_prob": 0.04805102686570477,
+        "removal_n_paired": 93,
+        "sufficiency_gain": -0.13978494623655924,
+        "isolation_n_paired": 93
+      }
+    }
+  },
+  "config": {
+    "model_path": "/content/drive/MyDrive/nt8",
+    "dry_run": false,
+    "n": 300,
+    "side": "premise",
+    "seed": 42,
+    "batch_size": 32,
+    "data_dir": "faithfulness/data",
+    "out_dir": "faithfulness/results/pilot_t5_nt8"
+  }
+}

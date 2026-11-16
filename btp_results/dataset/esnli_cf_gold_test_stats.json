@@ -1,0 +1,73 @@
+{
+  "split": "test",
+  "n_pairs": 9824,
+  "label_counts": {
+    "neutral": 3219,
+    "entailment": 3368,
+    "contradiction": 3237
+  },
+  "variants_per_label": {
+    "hypothesis:remove_gold": {
+      "neutral": 3207,
+      "entailment": 3210,
+      "contradiction": 3206
+    },
+    "hypothesis:remove_gold_random": {
+      "entailment": 2548,
+      "contradiction": 2828,
+      "neutral": 2935
+    },
+    "premise:isolate_gold": {
+      "entailment": 3368,
+      "contradiction": 3237
+    },
+    "premise:remove_gold": {
+      "entailment": 3350,
+      "contradiction": 3236
+    },
+    "premise:remove_gold_random": {
+      "entailment": 3074,
+      "contradiction": 3096
+    }
+  },
+  "n_variants_total": 37295,
+  "mean_highlighted_words": {
+    "hypothesis/contradiction": 2.08,
+    "hypothesis/entailment": 2.54,
+    "hypothesis/neutral": 2.21,
+    "premise/contradiction": 2.47,
+    "premise/entailment": 3.48,
+    "premise/neutral": 0.0
+  },
+  "frac_with_highlight": {
+    "hypothesis/contradiction": 1.0,
+    "hypothesis/entailment": 0.987,
+    "hypothesis/neutral": 1.0,
+    "premise/contradiction": 1.0,
+    "premise/entailment": 1.0,
+    "premise/neutral": 0.0
+  },
+  "stance_rules_validation": {
+    "accuracy_on_human_explanations": 0.8796,
+    "confusion_gold_x_stance": {
+      "entailment": {
+        "entailment": 3171,
+        "neutral": 42,
+        "contradiction": 155,
+        "none": 0
+      },
+      "neutral": {
+        "entailment": 288,
+        "neutral": 2459,
+        "contradiction": 472,
+        "none": 0
+      },
+      "contradiction": {
+        "entailment": 198,
+        "neutral": 28,
+        "contradiction": 3011,
+        "none": 0
+      }
+    }
+  }
+}
