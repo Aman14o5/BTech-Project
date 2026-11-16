@@ -31,7 +31,7 @@ CURATED = [
     ["brother", "sister"], ["gentleman", "lady"], ["gentlemen", "ladies"], ["king", "queen"],
     ["he", "she"], ["his", "her"],
     # age
-    ["child", "adult"], ["children", "adults"], ["kid", "adult"], ["kids", "adults"], ["young", "old", "elderly"],
+    ["child", "adult"], ["children", "adults"], ["kid", "adult"], ["kids", "adults"], ["young", "old"], ["young", "elderly"],
     ["baby", "teenager"], ["babies", "teenagers"],
     # common animals (WordNet puts dog and cat under different parents)
     ["dog", "cat", "horse", "cow", "sheep", "bird"], ["dogs", "cats", "horses", "cows", "birds"],
