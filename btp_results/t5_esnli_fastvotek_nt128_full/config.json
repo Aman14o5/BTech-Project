@@ -9,5 +9,10 @@
   "chunk": 1024,
   "n_boot": 1000,
   "data_dir": "faithfulness/data",
-  "out_dir": "/content/drive/MyDrive/btp_results/t5_esnli_fastvotek_nt128_full"
+  "out_dir": "/content/drive/MyDrive/btp_results/t5_esnli_fastvotek_nt128_full",
+  "no_contradiction": false,
+  "oracle": null,
+  "oracle_cache": null,
+  "oracle_batch_size": 64,
+  "oracle_min_conf": 0.9
 }

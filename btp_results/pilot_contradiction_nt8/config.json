@@ -1,0 +1,18 @@
+{
+  "model_path": "/content/drive/MyDrive/nt8",
+  "dry_run": false,
+  "split": "test",
+  "n": 300,
+  "seed": 42,
+  "batch_size": 32,
+  "label_batch_size": 128,
+  "chunk": 1024,
+  "n_boot": 1000,
+  "data_dir": "faithfulness/data",
+  "out_dir": "/content/drive/MyDrive/btp_results/pilot_contradiction_nt8",
+  "no_contradiction": false,
+  "oracle": null,
+  "oracle_cache": null,
+  "oracle_batch_size": 64,
+  "oracle_min_conf": 0.9
+}
