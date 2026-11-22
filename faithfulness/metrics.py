@@ -109,6 +109,40 @@ def diff_ci(a, b, n_boot=1000, seed=0, alpha=0.05):
     return {"mean": m, "lo": lo, "hi": hi, "n": len(a), "n_control": len(b)}
 
 
+def stratified_diff_ci(a, b, n_boot=1000, seed=0, alpha=0.05):
+    """Difference of means a - b computed WITHIN strata and averaged with the stratum sizes of `a`.
+
+    a, b: {stratum: [values]}. Only strata present in both are used. Used for contradiction edits,
+    where cited and control edits differ in the mix of operations (align / swap_shared / swap) and
+    the operations differ a lot in how often the model follows them: matching on the operation
+    removes that difference from the cited-vs-control comparison. Bootstrap resamples each stratum.
+    """
+    strata = [s for s in a if a[s] and b.get(s)]
+    n_a = sum(len(a[s]) for s in strata)
+    out = {"mean": None, "lo": None, "hi": None, "n": n_a, "n_control": sum(len(b[s]) for s in strata),
+           "strata": {s: {"n": len(a[s]), "n_control": len(b[s]), "diff": _mean(a[s]) - _mean(b[s])} for s in strata}}
+    if not strata:
+        return out
+    w = {s: len(a[s]) / n_a for s in strata}
+    out["mean"] = sum(w[s] * (_mean(a[s]) - _mean(b[s])) for s in strata)
+    try:
+        import numpy as np
+        rng = np.random.default_rng(seed)
+        tot = np.zeros(n_boot)
+        for s in strata:
+            A, B = np.asarray(a[s], dtype=float), np.asarray(b[s], dtype=float)
+            tot += w[s] * (A[rng.integers(0, len(A), size=(n_boot, len(A)))].mean(axis=1)
+                           - B[rng.integers(0, len(B), size=(n_boot, len(B)))].mean(axis=1))
+        out["lo"], out["hi"] = (float(x) for x in np.quantile(tot, [alpha / 2, 1 - alpha / 2]))
+    except ImportError:
+        rng = random.Random(seed)
+        tot = sorted(sum(w[s] * (_mean([a[s][rng.randrange(len(a[s]))] for _ in a[s]])
+                                 - _mean([b[s][rng.randrange(len(b[s]))] for _ in b[s]])) for s in strata)
+                     for _ in range(200))
+        out["lo"], out["hi"] = tot[int(alpha / 2 * 200)], tot[int((1 - alpha / 2) * 200) - 1]
+    return out
+
+
 def accuracy_macro_f1(gold, pred):
     acc = sum(g == p for g, p in zip(gold, pred)) / max(len(gold), 1)
     f1s = []
@@ -198,7 +232,7 @@ def _confident_oracle(r, key, min_conf):
 
 def counterfactual_correctness(records, n_boot=1000, min_conf=0.9):
     out = {"removal": {}, "isolation": {}, "contradiction": {}, "contradiction_follow_contrasts": {},
-           "oracle_min_conf": min_conf}
+           "contradiction_follow_contrasts_op_matched": {}, "oracle_min_conf": min_conf}
     for key in REMOVAL_KEYS:
         if not any(key in r["variants"] for r in records):
             continue
@@ -215,7 +249,7 @@ def counterfactual_correctness(records, n_boot=1000, min_conf=0.9):
                                                        for r in records if key in r["variants"] and _in_group(r, g)],
                                                       n_boot=n_boot)} for g in GROUPS}
 
-    follow_values = {}
+    follow_values, follow_by_op = {}, {}
     for key in CONTRADICTION_KEYS:
         if not any(key in r["variants"] for r in records):
             continue
@@ -228,7 +262,14 @@ def counterfactual_correctness(records, n_boot=1000, min_conf=0.9):
                 n_built += 1
                 o = _confident_oracle(r, key, min_conf)
                 if o is not None:
-                    rows.append((r["original"]["label"], o["label"], r["variants"][key]["label"]))
+                    op = ((r.get("contradiction_edits") or {}).get(key) or {}).get("op")
+                    rows.append((r["original"]["label"], o["label"], r["variants"][key]["label"], op))
+            by_op = {}
+            for y, o, m, op in rows:
+                if o != y:
+                    by_op.setdefault(op, []).append(float(m == o))
+            follow_by_op[(key, g)] = by_op
+            rows = [x[:3] for x in rows]
             change = [m == o for y, o, m in rows if o != y]
             stay = [m == y for y, o, m in rows if o == y]
             out["contradiction"][key][g] = {
@@ -244,6 +285,66 @@ def counterfactual_correctness(records, n_boot=1000, min_conf=0.9):
         if (a, "all") in follow_values and (b, "all") in follow_values:
             out["contradiction_follow_contrasts"][name] = {
                 g: diff_ci(follow_values[(a, g)], follow_values[(b, g)], n_boot=n_boot) for g in GROUPS}
+            # same comparison within each edit operation (cited and control edits differ in their mix)
+            out["contradiction_follow_contrasts_op_matched"][name] = {
+                g: stratified_diff_ci(follow_by_op[(a, g)], follow_by_op[(b, g)], n_boot=n_boot) for g in GROUPS}
+    return out
+
+
+# ---------------------------------------------------------------- explanation-evidence alignment
+ALIGN_MEASURES = ["label_changed", "explanation_changed", "consistent", "cites_absent", "mentions_new",
+                  "argues_expected", "aligned"]
+# cited vs control: share of aligned regenerated explanations, on edits the oracle says should change the label
+ALIGN_CONTRASTS = [("premise contradiction: aligned, cited vs random", "premise:contradict_cited",
+                    "premise:contradict_random"),
+                   ("hypothesis contradiction: aligned, cited vs random", "hypothesis:contradict_cited",
+                    "hypothesis:contradict_random")]
+
+
+def explanation_alignment(records, n_boot=1000, min_conf=0.9):
+    """Summary of the regenerated explanations (alignment.py), or None if none were generated."""
+    from alignment import features
+    keys = sorted({k for r in records for k in (r.get("variant_expl") or {})})
+    if not keys:
+        return None
+    feats = {k: [(r, f) for r in records for f in [features(r, k, min_conf)] if f is not None] for k in keys}
+
+    def measures(fs):
+        d = {"n": len(fs)}
+        for m in ALIGN_MEASURES:
+            vals = [float(f[m]) for f in fs if m in f]
+            if vals:
+                d[m] = _ci_dict(vals, n_boot=n_boot)
+        return d
+
+    out = {"n_examples": sum(1 for r in records if r.get("variant_expl")), "min_conf": min_conf,
+           "variants": {}, "contrasts": {}, "contrasts_op_matched": {}}
+    for k, rf in feats.items():
+        fs = [f for _, f in rf]
+        d = {"family": fs[0]["family"] if fs else None,
+             "all": measures(fs),
+             "label_changed": measures([f for f in fs if f["label_changed"]]),
+             "label_kept": measures([f for f in fs if not f["label_changed"]]),
+             "aligned_by_predicted_label": {g: _ci_dict([float(f["aligned"]) for r, f in rf if r["original"]["label"] == g],
+                                                        n_boot=n_boot) for g in LABELS}}
+        if d["family"] == "contradiction":
+            d["should_change"] = measures([f for f in fs if f.get("should_change")])
+            d["should_change_by_op"] = {}
+            for op in sorted({f["op"] for f in fs}):
+                d["should_change_by_op"][op] = measures([f for f in fs if f.get("should_change") and f["op"] == op])
+        out["variants"][k] = d
+
+    def should_change(k):
+        return [f for _, f in feats.get(k, []) if f.get("should_change")]
+
+    for name, a, b in ALIGN_CONTRASTS:
+        fa, fb = should_change(a), should_change(b)
+        if not fa or not fb:
+            continue
+        out["contrasts"][name] = diff_ci([float(f["aligned"]) for f in fa], [float(f["aligned"]) for f in fb],
+                                         n_boot=n_boot)
+        by_op = lambda fs: {op: [float(f["aligned"]) for f in fs if f["op"] == op] for op in {f["op"] for f in fs}}
+        out["contrasts_op_matched"][name] = stratified_diff_ci(by_op(fa), by_op(fb), n_boot=n_boot)
     return out
 
 
@@ -298,4 +399,5 @@ def summarise(records, n_boot=1000, oracle_min_conf=0.9):
         "transitions": transitions(records, keys),
         "counterfactual_correctness": counterfactual_correctness(records, n_boot, oracle_min_conf),
         "oracle": oracle_summary(records, oracle_min_conf),
+        "explanation_alignment": explanation_alignment(records, n_boot, oracle_min_conf),
     }

@@ -12,6 +12,9 @@
      plus records.jsonl (everything), per_example.csv (for reading),
      contradiction_edits.csv (every edit, for checking) and
      spotcheck_contradiction.csv (150 edits to label by hand; written once, never overwritten)
+  4c. (optional, --explain_variants N) for N examples the model also REGENERATES its explanation on
+      the edited inputs (alignment.EXPLAIN_KEYS)                      -> variant_expl.jsonl (cache)
+      -> explanation-evidence alignment in summary.json, variant_explanations.csv (for reading)
 
 Re-running with the same --out_dir reuses every cached prediction, so adding the contradiction
 intervention to an existing run only computes the new edits.
@@ -19,6 +22,7 @@ intervention to an existing run only computes the new edits.
 Run from the repo root:
   python faithfulness/run_experiment.py --model_path <ckpt> --n 2000 --out_dir <dir>
   python faithfulness/run_experiment.py --dry_run --n 300            # pipeline test, numbers meaningless
+  python faithfulness/run_experiment.py --model_path <ckpt> --out_dir <existing run> --explain_variants 2000
 Then: python faithfulness/plots.py --run_dir <dir>
 """
 import argparse
@@ -32,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from data import download_esnli, load_esnli
 from evidence import cited_indices, overlap_prf
+from alignment import EXPLAIN_KEYS, features as alignment_features
 from interventions import build_contradiction_variants, build_variants
 from metrics import summarise
 from stance import stance
@@ -94,6 +99,11 @@ def main():
     ap.add_argument("--oracle_batch_size", type=int, default=64)
     ap.add_argument("--oracle_min_conf", type=float, default=0.9,
                     help="only edits whose oracle label has at least this probability are scored")
+    ap.add_argument("--explain_variants", type=int, default=0,
+                    help="regenerate explanations on the edited inputs of this many examples (0 = off); "
+                         "a fixed random subset, the same for every model and every --n")
+    ap.add_argument("--explain_keys", default=",".join(EXPLAIN_KEYS),
+                    help="comma-separated variant keys whose explanations are regenerated")
     args = ap.parse_args()
 
     if args.dry_run:
@@ -156,6 +166,10 @@ def main():
         ex_id, vname = key.split("||", 1)
         by_id[ex_id]["variants"][vname] = vpreds[key]
 
+    # 4c) regenerate explanations on the edited inputs of a fixed subset (explanation-evidence alignment)
+    if args.explain_variants > 0:
+        explain_variants(records, predictor, args)
+
     # 4b) oracle: expected labels for the contradiction edits (+ original pairs, to report its accuracy)
     if swapper is not None:
         del predictor
@@ -169,6 +183,9 @@ def main():
     write_per_example_csv(records, os.path.join(args.out_dir, "per_example.csv"))
     if swapper is not None:
         write_contradiction_csvs(records, args.out_dir, args.oracle_min_conf, args.seed)
+    if args.explain_variants > 0:
+        write_variant_explanations_csv(records, os.path.join(args.out_dir, "variant_explanations.csv"),
+                                       args.oracle_min_conf)
 
     print("Computing metrics (bootstrap)...")
     summary = summarise(records, n_boot=args.n_boot, oracle_min_conf=args.oracle_min_conf)
@@ -178,6 +195,54 @@ def main():
     print_summary(summary)
     print(f"\nWrote {args.out_dir}/  (records.jsonl, per_example.csv, summary.json)")
     print(f"Next: python faithfulness/plots.py --run_dir {args.out_dir}")
+
+
+def explain_subset(ids, n, seed):
+    """A fixed random subset of example ids: depends only on the ids, n and seed, so every model
+    regenerates explanations for the same pairs."""
+    import random
+    ids = sorted(ids)
+    return set(ids if n >= len(ids) else random.Random(f"{seed}-explain").sample(ids, n))
+
+
+def explain_variants(records, predictor, args):
+    keys = [k.strip() for k in args.explain_keys.split(",") if k.strip()]
+    subset = explain_subset([r["id"] for r in records], args.explain_variants, args.seed)
+    jobs = []
+    for r in records:
+        if r["id"] in subset:
+            for k in keys:
+                if k in r["variant_inputs"]:
+                    v = r["variant_inputs"][k]
+                    jobs.append((f"{r['id']}||{k}", (v["premise"], v["hypothesis"])))
+    preds = _run_cached(os.path.join(args.out_dir, "variant_expl.jsonl"), jobs, predictor.predict,
+                        args.chunk, f"variant explanations ({len(subset)} examples x {len(keys)} variants, generate)")
+    by_id = {r["id"]: r for r in records}
+    for key, _ in jobs:
+        ex_id, vname = key.split("||", 1)
+        by_id[ex_id].setdefault("variant_expl", {})[vname] = preds[key]
+
+
+def write_variant_explanations_csv(records, path, min_conf):
+    """One row per regenerated explanation: original and edited input, both explanations, checks."""
+    header = ["id", "gold", "variant", "op", "target", "substitute", "premise", "hypothesis",
+              "edited_premise", "edited_hypothesis", "original_pred", "original_explanation",
+              "new_pred", "new_explanation", "new_stance", "oracle_label", "label_changed", "explanation_changed",
+              "consistent", "mentions_new", "cites_absent", "absent_words_cited", "aligned"]
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        for r in records:
+            for k in sorted(r.get("variant_expl") or {}):
+                ft = alignment_features(r, k, min_conf)
+                e = r["contradiction_edits"].get(k, {})
+                v = r["variant_inputs"][k]
+                w.writerow([r["id"], r["label"], k, e.get("op", ""), e.get("target", ""), e.get("substitute", ""),
+                            r["premise"], r["hypothesis"], v["premise"], v["hypothesis"], r["original"]["label"],
+                            r["original"]["explanation"], ft["new_label"], ft["explanation"], ft["stance"],
+                            ft.get("oracle_label", ""), ft["label_changed"], ft["explanation_changed"],
+                            ft["consistent"], ft.get("mentions_new", ""), ft["cites_absent"],
+                            " ".join(ft["absent_words_cited"]), ft["aligned"]])
 
 
 def _free_gpu():
@@ -324,6 +389,24 @@ def print_summary(s):
             x = d["all"]
             if x["mean"] is not None:
                 print(f"  {name}: {x['mean']:+.3f} [{x['lo']:+.3f}, {x['hi']:+.3f}]")
+            x = cc.get("contradiction_follow_contrasts_op_matched", {}).get(name, {}).get("all")
+            if x and x["mean"] is not None:
+                print(f"  {name} (same edit operation): {x['mean']:+.3f} [{x['lo']:+.3f}, {x['hi']:+.3f}]")
+
+    ea = s.get("explanation_alignment")
+    if ea:
+        print(f"\nExplanation-evidence alignment ({ea['n_examples']} examples, regenerated explanations):")
+        print(f"  {'variant':<30}{'n':>6}{'label chg':>11}{'expl chg':>10}{'consistent':>12}{'cites gone':>12}"
+              f"{'mentions new':>14}{'aligned':>9}")
+        for k, d in ea["variants"].items():
+            a = d["all"]
+            fmt = lambda m: f"{a[m]['mean']:.3f}" if m in a and a[m]["mean"] is not None else "  -  "
+            print(f"  {k:<30}{a['n']:>6}{fmt('label_changed'):>11}{fmt('explanation_changed'):>10}"
+                  f"{fmt('consistent'):>12}{fmt('cites_absent'):>12}{fmt('mentions_new'):>14}{fmt('aligned'):>9}")
+        for tag, block in (("", ea["contrasts"]), (" (same edit operation)", ea["contrasts_op_matched"])):
+            for name, x in block.items():
+                if x["mean"] is not None:
+                    print(f"  {name}{tag}: {x['mean']:+.3f} [{x['lo']:+.3f}, {x['hi']:+.3f}]")
 
 
 if __name__ == "__main__":
