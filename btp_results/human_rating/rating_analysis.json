@@ -1,0 +1,868 @@
+{
+  "validity": {
+    "rater1": {
+      "file": "rating_sheet_rater1.xlsx",
+      "rated": 200,
+      "missing_or_invalid": 0,
+      "rows_with_shortcomings": 0
+    },
+    "rater2": {
+      "file": "rating_sheet_rater2.xlsx",
+      "rated": 200,
+      "missing_or_invalid": 0,
+      "rows_with_shortcomings": 0
+    },
+    "rater3": {
+      "file": "rating_sheet_rater3.xlsx",
+      "rated": 200,
+      "missing_or_invalid": 0,
+      "rows_with_shortcomings": 79
+    }
+  },
+  "agreement": {
+    "alpha_ordinal": 0.44887039446960264,
+    "alpha_interval": 0.44453419229871927,
+    "alpha_nominal": 0.19306867356538093,
+    "alpha_interval_ci": [
+      0.3586881858700875,
+      0.5314740560370855
+    ],
+    "pairwise": {
+      "r1-r2": {
+        "spearman": 0.4211650245181859,
+        "exact": 0.395,
+        "within_one_step": 0.735
+      },
+      "r1-r3": {
+        "spearman": 0.5872643128040501,
+        "exact": 0.435,
+        "within_one_step": 0.86
+      },
+      "r2-r3": {
+        "spearman": 0.3914740822365216,
+        "exact": 0.38,
+        "within_one_step": 0.7
+      }
+    },
+    "alpha_binary_accept": 0.34873789454806314,
+    "rater_means": [
+      0.5583333333333332,
+      0.5616666666666666,
+      0.5083333333333333
+    ],
+    "rater_accept_rate": [
+      0.555,
+      0.59,
+      0.495
+    ]
+  },
+  "quality": {
+    "random_nt8": {
+      "n": 50,
+      "mean": 0.42444444444444435,
+      "plausible_rate": 0.34,
+      "by_pred_label": {
+        "entailment": 0.35185185185185186,
+        "neutral": 0.45833333333333326,
+        "contradiction": 0.4722222222222222
+      },
+      "correct_pred": 0.4444444444444443,
+      "wrong_pred": 0.27777777777777773
+    },
+    "fastvotek_nt8": {
+      "n": 50,
+      "mean": 0.4955555555555555,
+      "plausible_rate": 0.36,
+      "by_pred_label": {
+        "entailment": 0.4567901234567901,
+        "neutral": 0.5625,
+        "contradiction": 0.47222222222222227
+      },
+      "correct_pred": 0.5525525525525525,
+      "wrong_pred": 0.33333333333333326
+    },
+    "random_nt128": {
+      "n": 50,
+      "mean": 0.691111111111111,
+      "plausible_rate": 0.64,
+      "by_pred_label": {
+        "entailment": 0.6851851851851851,
+        "neutral": 0.6666666666666667,
+        "contradiction": 0.7222222222222221
+      },
+      "correct_pred": 0.7260981912144703,
+      "wrong_pred": 0.47619047619047616
+    },
+    "fastvotek_nt128": {
+      "n": 50,
+      "mean": 0.5599999999999999,
+      "plausible_rate": 0.44,
+      "by_pred_label": {
+        "entailment": 0.5308641975308642,
+        "neutral": 0.42361111111111105,
+        "contradiction": 0.7291666666666665
+      },
+      "correct_pred": 0.5679012345679012,
+      "wrong_pred": 0.48888888888888893
+    },
+    "all": {
+      "n": 200,
+      "mean": 0.5427777777777778,
+      "plausible_rate": 0.445,
+      "by_pred_label": {
+        "entailment": 0.5061728395061729,
+        "neutral": 0.5277777777777777,
+        "contradiction": 0.5989583333333333
+      },
+      "correct_pred": 0.5726495726495726,
+      "wrong_pred": 0.37992831541218625
+    }
+  },
+  "rq2": {
+    "pooled": {
+      "consistent": {
+        "n": 200,
+        "rho": 0.4525725626636318,
+        "p": 1.719042777305676e-11,
+        "ci": [
+          0.3480210357657591,
+          0.5672934652160563
+        ]
+      },
+      "suspect_unfaithful": {
+        "n": 200,
+        "rho": -0.32364630322860494,
+        "p": 2.942446665247775e-06,
+        "ci": [
+          -0.44914134092858715,
+          -0.20454104338702822
+        ]
+      },
+      "remove_cited_drop": {
+        "n": 132,
+        "rho": -0.0126630406924559,
+        "p": 0.8854141822755106,
+        "ci": [
+          -0.16779753161113023,
+          0.145984403134712
+        ]
+      },
+      "cited_minus_random_drop": {
+        "n": 120,
+        "rho": 0.13328414409706324,
+        "p": 0.1467086414060645,
+        "ci": [
+          -0.051471575860963154,
+          0.3027985261684531
+        ]
+      },
+      "remove_cited_flip": {
+        "n": 132,
+        "rho": -0.016210886052421984,
+        "p": 0.853629411648845,
+        "ci": [
+          -0.18211243151966197,
+          0.15317307084601253
+        ]
+      },
+      "isolate_cited_keeps": {
+        "n": 132,
+        "rho": 0.16268640128501713,
+        "p": 0.062352130505765005,
+        "ci": [
+          -0.017589679496518573,
+          0.3166257497045674
+        ]
+      },
+      "alignment_rate": {
+        "n": 197,
+        "rho": 0.35197559913598975,
+        "p": 3.936157246547638e-07,
+        "ci": [
+          0.22339972982396822,
+          0.46680347055549026
+        ]
+      },
+      "remove_cited_expl_consistent": {
+        "n": 189,
+        "rho": 0.12724085560105172,
+        "p": 0.08102547745097267,
+        "ci": [
+          -0.01986354085022907,
+          0.270165704190762
+        ]
+      },
+      "contradict_cited_aligned": {
+        "n": 142,
+        "rho": 0.07396640033587379,
+        "p": 0.3816718501476315,
+        "ci": [
+          -0.09212721263264874,
+          0.23685092287345727
+        ]
+      }
+    },
+    "per_model": {
+      "random_nt8": {
+        "consistent": {
+          "n": 50,
+          "rho": 0.6510127295578586,
+          "p": 3.0745717674781606e-07,
+          "ci": [
+            0.4711823019890764,
+            0.7827050323095263
+          ]
+        },
+        "suspect_unfaithful": {
+          "n": 50,
+          "rho": -0.6488758131220751,
+          "p": 3.461152588599278e-07,
+          "ci": [
+            -0.8007207371725835,
+            -0.42210968198258486
+          ]
+        },
+        "remove_cited_drop": {
+          "n": 33,
+          "rho": 0.1165109694396807,
+          "p": 0.5184722825140765,
+          "ci": [
+            -0.24901136815315622,
+            0.4322213209086266
+          ]
+        },
+        "cited_minus_random_drop": {
+          "n": 30,
+          "rho": 0.2846032617886202,
+          "p": 0.1274286605290673,
+          "ci": [
+            -0.0685245171318569,
+            0.5859193595908009
+          ]
+        },
+        "remove_cited_flip": {
+          "n": 33,
+          "rho": 0.09095099509435046,
+          "p": 0.6147017898713322,
+          "ci": [
+            -0.26009671085003866,
+            0.4356104236008553
+          ]
+        },
+        "isolate_cited_keeps": {
+          "n": 33,
+          "rho": 0.0519719971967717,
+          "p": 0.7739295903585314,
+          "ci": [
+            -0.28390961802871456,
+            0.3825611964851048
+          ]
+        },
+        "alignment_rate": {
+          "n": 50,
+          "rho": 0.3488363341122556,
+          "p": 0.013035665480996333,
+          "ci": [
+            0.06122586325137275,
+            0.5943604832101163
+          ]
+        },
+        "remove_cited_expl_consistent": {
+          "n": 46,
+          "rho": 0.13863129309692682,
+          "p": 0.3581926306133934,
+          "ci": [
+            -0.1639675967410001,
+            0.41446895983964455
+          ]
+        },
+        "contradict_cited_aligned": {
+          "n": 40,
+          "rho": 0.07688520574508308,
+          "p": 0.6372520611396797,
+          "ci": [
+            -0.23806160891768757,
+            0.4021461433301233
+          ]
+        }
+      },
+      "fastvotek_nt8": {
+        "consistent": {
+          "n": 50,
+          "rho": 0.4750531020773764,
+          "p": 0.000490301500727876,
+          "ci": [
+            0.2548511105612646,
+            0.6649681266616334
+          ]
+        },
+        "suspect_unfaithful": {
+          "n": 50,
+          "rho": -0.421184695273006,
+          "p": 0.002319288195028646,
+          "ci": [
+            -0.6406094188150295,
+            -0.16833042530982517
+          ]
+        },
+        "remove_cited_drop": {
+          "n": 31,
+          "rho": -0.036311333377987025,
+          "p": 0.8462318558439277,
+          "ci": [
+            -0.3514106285333542,
+            0.2836501815358042
+          ]
+        },
+        "cited_minus_random_drop": {
+          "n": 28,
+          "rho": 0.015435868134986456,
+          "p": 0.9378603028505731,
+          "ci": [
+            -0.3292330767231504,
+            0.3646263245232922
+          ]
+        },
+        "remove_cited_flip": {
+          "n": 31,
+          "rho": -0.2395257979861906,
+          "p": 0.19435351202790432,
+          "ci": [
+            -0.5434756423544022,
+            0.12301890589062253
+          ]
+        },
+        "isolate_cited_keeps": {
+          "n": 31,
+          "rho": 0.1718036815719395,
+          "p": 0.3554080420906482,
+          "ci": [
+            -0.2125578838953755,
+            0.5186108360234655
+          ]
+        },
+        "alignment_rate": {
+          "n": 49,
+          "rho": 0.3506168854587615,
+          "p": 0.013514213366636257,
+          "ci": [
+            0.09509360935813307,
+            0.5676404626372218
+          ]
+        },
+        "remove_cited_expl_consistent": {
+          "n": 45,
+          "rho": 0.18281910030822196,
+          "p": 0.22934826728928068,
+          "ci": [
+            -0.10273765532449533,
+            0.4543844509726498
+          ]
+        },
+        "contradict_cited_aligned": {
+          "n": 35,
+          "rho": -0.028617748382072008,
+          "p": 0.8703692953671707,
+          "ci": [
+            -0.3500472240071056,
+            0.32404202568844925
+          ]
+        }
+      },
+      "random_nt128": {
+        "consistent": {
+          "n": 50,
+          "rho": 0.15908708286128273,
+          "p": 0.2698061477035657,
+          "ci": [
+            -0.13774755358930085,
+            0.4214858920155596
+          ]
+        },
+        "suspect_unfaithful": {
+          "n": 50,
+          "rho": 0.04074617424526269,
+          "p": 0.7787500727483798,
+          "ci": [
+            -0.23907360774510453,
+            0.3144086727772077
+          ]
+        },
+        "remove_cited_drop": {
+          "n": 34,
+          "rho": -0.2786779597732562,
+          "p": 0.11049385804258875,
+          "ci": [
+            -0.594984213698398,
+            0.09345367852060164
+          ]
+        },
+        "cited_minus_random_drop": {
+          "n": 31,
+          "rho": -0.06972621084965433,
+          "p": 0.7093570634711236,
+          "ci": [
+            -0.4859603428799367,
+            0.3226580983902055
+          ]
+        },
+        "remove_cited_flip": {
+          "n": 34,
+          "rho": -0.18367670379482148,
+          "p": 0.2984191990822849,
+          "ci": [
+            -0.5010363815234254,
+            0.17540750776904515
+          ]
+        },
+        "isolate_cited_keeps": {
+          "n": 34,
+          "rho": 0.07672686822024356,
+          "p": 0.6662552528148866,
+          "ci": [
+            -0.24164304172497744,
+            0.3730383994958256
+          ]
+        },
+        "alignment_rate": {
+          "n": 49,
+          "rho": 0.11103198154099161,
+          "p": 0.4475460005481608,
+          "ci": [
+            -0.19993924598709858,
+            0.42521430145535755
+          ]
+        },
+        "remove_cited_expl_consistent": {
+          "n": 49,
+          "rho": -0.06806139097297727,
+          "p": 0.6421677643883044,
+          "ci": [
+            -0.3436369037316024,
+            0.2335859491819831
+          ]
+        },
+        "contradict_cited_aligned": {
+          "n": 36,
+          "rho": -0.3274080478190403,
+          "p": 0.05126898427845133,
+          "ci": [
+            -0.598947588218238,
+            7.316575260118128e-05
+          ]
+        }
+      },
+      "fastvotek_nt128": {
+        "consistent": {
+          "n": 50,
+          "rho": 0.36637196635545555,
+          "p": 0.008875957015215515,
+          "ci": [
+            0.10814356882290302,
+            0.58027414881274
+          ]
+        },
+        "suspect_unfaithful": {
+          "n": 50,
+          "rho": -0.29058953144949234,
+          "p": 0.040636845039511586,
+          "ci": [
+            -0.5366042362126324,
+            -0.023923449651208618
+          ]
+        },
+        "remove_cited_drop": {
+          "n": 34,
+          "rho": 0.25906453467933765,
+          "p": 0.13901147387540796,
+          "ci": [
+            -0.09526660337199373,
+            0.5641220760493535
+          ]
+        },
+        "cited_minus_random_drop": {
+          "n": 31,
+          "rho": 0.34044502972871066,
+          "p": 0.06092447269816639,
+          "ci": [
+            -0.01234891043155184,
+            0.6544959158034216
+          ]
+        },
+        "remove_cited_flip": {
+          "n": 34,
+          "rho": 0.214542436289874,
+          "p": 0.2230554742001168,
+          "ci": [
+            -0.12682457357320606,
+            0.5258065059006134
+          ]
+        },
+        "isolate_cited_keeps": {
+          "n": 34,
+          "rho": 0.21335873968853342,
+          "p": 0.22568045544881463,
+          "ci": [
+            -0.12980042858424984,
+            0.5364304492667656
+          ]
+        },
+        "alignment_rate": {
+          "n": 49,
+          "rho": 0.16336530966586213,
+          "p": 0.2620363828398252,
+          "ci": [
+            -0.14250810116527493,
+            0.4249798503242153
+          ]
+        },
+        "remove_cited_expl_consistent": {
+          "n": 49,
+          "rho": 0.011811367362631657,
+          "p": 0.9358014782297378,
+          "ci": [
+            -0.2725754843629936,
+            0.28670499330677746
+          ]
+        },
+        "contradict_cited_aligned": {
+          "n": 31,
+          "rho": 0.11442436971329455,
+          "p": 0.5399254092992032,
+          "ci": [
+            -0.2663404056167911,
+            0.46666636257913635
+          ]
+        }
+      }
+    },
+    "model_level": {
+      "random_nt8": {
+        "quality": 0.42444444444444435,
+        "consistent": 0.66,
+        "suspect_unfaithful": 0.5,
+        "remove_cited_drop": 0.42696969696969694,
+        "cited_minus_random_drop": 0.23369999999999996,
+        "remove_cited_flip": 0.42424242424242425,
+        "isolate_cited_keeps": 0.5757575757575758,
+        "alignment_rate": 0.4361666666666666,
+        "remove_cited_expl_consistent": 0.5217391304347826,
+        "contradict_cited_aligned": 0.325
+      },
+      "fastvotek_nt8": {
+        "quality": 0.4955555555555555,
+        "consistent": 0.64,
+        "suspect_unfaithful": 0.5,
+        "remove_cited_drop": 0.5145483870967742,
+        "cited_minus_random_drop": 0.35175,
+        "remove_cited_flip": 0.6451612903225806,
+        "isolate_cited_keeps": 0.5483870967741935,
+        "alignment_rate": 0.4328960155490767,
+        "remove_cited_expl_consistent": 0.4,
+        "contradict_cited_aligned": 0.5428571428571428
+      },
+      "random_nt128": {
+        "quality": 0.691111111111111,
+        "consistent": 0.82,
+        "suspect_unfaithful": 0.5,
+        "remove_cited_drop": 0.40755882352941175,
+        "cited_minus_random_drop": 0.2598387096774193,
+        "remove_cited_flip": 0.4411764705882353,
+        "isolate_cited_keeps": 0.7058823529411765,
+        "alignment_rate": 0.7054907677356658,
+        "remove_cited_expl_consistent": 0.7142857142857143,
+        "contradict_cited_aligned": 0.7222222222222222
+      },
+      "fastvotek_nt128": {
+        "quality": 0.5599999999999999,
+        "consistent": 0.76,
+        "suspect_unfaithful": 0.5,
+        "remove_cited_drop": 0.40770588235294114,
+        "cited_minus_random_drop": 0.26264516129032256,
+        "remove_cited_flip": 0.4411764705882353,
+        "isolate_cited_keeps": 0.6470588235294118,
+        "alignment_rate": 0.7282555879494655,
+        "remove_cited_expl_consistent": 0.8367346938775511,
+        "contradict_cited_aligned": 0.6451612903225806
+      }
+    }
+  },
+  "rq3": {
+    "definition": "quality >= 2/3 and fails_any (stance_disagrees, removal_insensitive, isolation_loses_label, contradiction_misaligned)",
+    "n_items": 200,
+    "n_plausible": 89,
+    "n_plausible_unfaithful": 57,
+    "rate_of_all": 0.285,
+    "rate_of_plausible": 0.6404494382022472,
+    "by_test": {
+      "stance_disagrees": {
+        "fails": 56,
+        "of_which_plausible": 9,
+        "mean_quality_fail": 0.31150793650793646,
+        "mean_quality_pass": 0.6327160493827161
+      },
+      "removal_insensitive": {
+        "fails": 46,
+        "of_which_plausible": 21,
+        "mean_quality_fail": 0.5893719806763285,
+        "mean_quality_pass": 0.5288600288600288
+      },
+      "isolation_loses_label": {
+        "fails": 50,
+        "of_which_plausible": 20,
+        "mean_quality_fail": 0.491111111111111,
+        "mean_quality_pass": 0.5599999999999999
+      },
+      "contradiction_misaligned": {
+        "fails": 64,
+        "of_which_plausible": 25,
+        "mean_quality_fail": 0.5225694444444444,
+        "mean_quality_pass": 0.5522875816993464
+      }
+    },
+    "by_model": {
+      "fastvotek_nt128": {
+        "plausible": 22,
+        "plausible_unfaithful": 14,
+        "rate": 0.6363636363636364
+      },
+      "fastvotek_nt8": {
+        "plausible": 18,
+        "plausible_unfaithful": 10,
+        "rate": 0.5555555555555556
+      },
+      "random_nt128": {
+        "plausible": 32,
+        "plausible_unfaithful": 23,
+        "rate": 0.71875
+      },
+      "random_nt8": {
+        "plausible": 17,
+        "plausible_unfaithful": 10,
+        "rate": 0.5882352941176471
+      }
+    },
+    "by_pred": {
+      "contradiction": {
+        "plausible": 29,
+        "plausible_unfaithful": 19,
+        "rate": 0.6551724137931034
+      },
+      "entailment": {
+        "plausible": 33,
+        "plausible_unfaithful": 24,
+        "rate": 0.7272727272727273
+      },
+      "neutral": {
+        "plausible": 27,
+        "plausible_unfaithful": 14,
+        "rate": 0.5185185185185185
+      }
+    },
+    "by_premise_len": {
+      "long (>12)": {
+        "plausible": 45,
+        "plausible_unfaithful": 27,
+        "rate": 0.6
+      },
+      "short (<=12)": {
+        "plausible": 44,
+        "plausible_unfaithful": 30,
+        "rate": 0.6818181818181818
+      }
+    },
+    "premise_len_mean": {
+      "plausible_unfaithful": 13.035087719298245,
+      "plausible_faithful": 14.21875
+    },
+    "shortcomings": {
+      "Does not make sense": {
+        "plausible_unfaithful": 0,
+        "other_plausible": 0,
+        "all": 33
+      },
+      "Insufficient": {
+        "plausible_unfaithful": 7,
+        "other_plausible": 4,
+        "all": 30
+      },
+      "Irrelevant": {
+        "plausible_unfaithful": 0,
+        "other_plausible": 0,
+        "all": 1
+      },
+      "Only repeats": {
+        "plausible_unfaithful": 3,
+        "other_plausible": 0,
+        "all": 17
+      },
+      "Hallucinated": {
+        "plausible_unfaithful": 0,
+        "other_plausible": 0,
+        "all": 2
+      }
+    },
+    "examples": [
+      {
+        "item": "Q144",
+        "model": "fastvotek_nt128",
+        "gold": "contradiction",
+        "pred": "contradiction",
+        "premise": "A woman with a vest and red shirt is holding her hand up above a black and white dog that is jumping.",
+        "hypothesis": "The woman is wearing a full sleeved jacket.",
+        "explanation": "vest and jacket are different garments",
+        "quality": 1.0,
+        "fails": [
+          "removal_insensitive"
+        ]
+      },
+      {
+        "item": "Q001",
+        "model": "fastvotek_nt128",
+        "gold": "entailment",
+        "pred": "entailment",
+        "premise": "An older man is speaking to a boy while both are sitting.",
+        "hypothesis": "Older man talking",
+        "explanation": "the man is speaking to a boy while both are sitting.",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "stance_disagrees",
+          "isolation_loses_label"
+        ]
+      },
+      {
+        "item": "Q092",
+        "model": "fastvotek_nt128",
+        "gold": "neutral",
+        "pred": "contradiction",
+        "premise": "An oriental woman in glasses, shooting archery.",
+        "hypothesis": "The woman is American.",
+        "explanation": "the woman cannot be both oriental and American",
+        "quality": 0.7777777777777778,
+        "fails": [
+          "contradiction_misaligned"
+        ]
+      },
+      {
+        "item": "Q076",
+        "model": "fastvotek_nt128",
+        "gold": "neutral",
+        "pred": "neutral",
+        "premise": "A young ladies squatting at hillside sipping on a drink the other one with the white purse is talking pictures.",
+        "hypothesis": "A group of hikers pause for a break.",
+        "explanation": "a group of hikers pause for a break is not the same as a group of ladies squatting at hillside sipping a drink.",
+        "quality": 0.7777777777777777,
+        "fails": [
+          "stance_disagrees"
+        ]
+      },
+      {
+        "item": "Q117",
+        "model": "fastvotek_nt8",
+        "gold": "neutral",
+        "pred": "neutral",
+        "premise": "People with bags walk along a dirt road in front of a green building.",
+        "hypothesis": "Homeless people are walking outside.",
+        "explanation": "people with bags aren't homeless.",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "stance_disagrees"
+        ]
+      },
+      {
+        "item": "Q106",
+        "model": "random_nt128",
+        "gold": "entailment",
+        "pred": "entailment",
+        "premise": "Island native fishermen reeling in their nets after a long day's work.",
+        "hypothesis": "The men are finishing their day of work.",
+        "explanation": "men reeling in their nets is a rephrasing of '' men are finishing their day of work.''",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "removal_insensitive",
+          "isolation_loses_label"
+        ]
+      },
+      {
+        "item": "Q193",
+        "model": "fastvotek_nt8",
+        "gold": "contradiction",
+        "pred": "contradiction",
+        "premise": "A girl climbing a chain link fence.",
+        "hypothesis": "The girl falls from the fence.",
+        "explanation": "a girl who climbs a fence cannot also fall from it.",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "contradiction_misaligned"
+        ]
+      },
+      {
+        "item": "Q090",
+        "model": "random_nt8",
+        "gold": "contradiction",
+        "pred": "contradiction",
+        "premise": "A woman is in the middle of hitting a tennis ball.",
+        "hypothesis": "A woman is sleeping.",
+        "explanation": "a woman cannot be sleeping while hitting a tennis ball.",
+        "quality": 1.0,
+        "fails": [
+          "removal_insensitive",
+          "contradiction_misaligned"
+        ]
+      },
+      {
+        "item": "Q122",
+        "model": "fastvotek_nt8",
+        "gold": "contradiction",
+        "pred": "contradiction",
+        "premise": "A bird is perched on a tree branch.",
+        "hypothesis": "A squirrel plays in a tree.",
+        "explanation": "a bird cannot be a squirrel.",
+        "quality": 1.0,
+        "fails": [
+          "isolation_loses_label"
+        ]
+      },
+      {
+        "item": "Q111",
+        "model": "random_nt128",
+        "gold": "entailment",
+        "pred": "entailment",
+        "premise": "A man in dark clothing walking in a transit station.",
+        "hypothesis": "A man walking through a transit station.",
+        "explanation": "man in dark clothing is a form of man.",
+        "quality": 0.8888888888888888,
+        "fails": [
+          "removal_insensitive",
+          "isolation_loses_label"
+        ]
+      },
+      {
+        "item": "Q198",
+        "model": "random_nt128",
+        "gold": "entailment",
+        "pred": "neutral",
+        "premise": "Four young female gymnasts dressed in black and blue leotards are preparing for their next routine.",
+        "hypothesis": "Gymnast group preparing for a competition.",
+        "explanation": "gymnasts do not have to be competitive in order to prepare for their next routine.",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "stance_disagrees"
+        ]
+      },
+      {
+        "item": "Q143",
+        "model": "random_nt128",
+        "gold": "entailment",
+        "pred": "entailment",
+        "premise": "A child being watched while getting something out of a tank.",
+        "hypothesis": "The tank has an opening.",
+        "explanation": "a tank has an opening.",
+        "quality": 0.6666666666666666,
+        "fails": [
+          "isolation_loses_label"
+        ]
+      }
+    ]
+  }
+}

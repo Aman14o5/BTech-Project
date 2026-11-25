@@ -32,9 +32,10 @@
 | Accuracy, evidence sensitivity, counterfactual correctness (plan Table 2) | ✅ done |
 | Explanation-evidence alignment (regenerated explanations, 2,000 pairs × 4 models) | ✅ done, results committed |
 | Same-edit-type ("op-matched") contradiction contrasts | ✅ in every `summary.json` |
-| Human rating sheets (200 items) | ✅ built; **raters 2 and 3 finished (200/200); rater 1 not started** |
-| Contradiction spot-check (150 edits) | ❌ not done yet (one person, about 1 h) |
-| RQ2 (Spearman) and RQ3 (plausible-but-unfaithful) analysis | ❌ waiting for rater 1 |
+| Human rating sheets (200 items) | ✅ all three raters finished (200/200), committed |
+| Contradiction spot-check (150 edits) | ❌ not done yet (one person, about 1 h); parked by the user on 25 Nov |
+| RQ2 (Spearman) and RQ3 (plausible-but-unfaithful) analysis | ✅ first pass done (`faithfulness/analyse_ratings.py`, results in `btp_results/human_rating/`); see §6 |
+| RQ2/RQ3 figure | ❌ to do |
 | Contradiction figure for the report | ❌ to do (laptop only, from committed CSVs) |
 | Findings artifact update | ❌ to do (https://claude.ai/artifact/Waz1vFSXtTSvMjMFU5L83v, last updated 12 Nov; read it before republishing to the same URL) |
 | BTP-I report | ❌ not started; the main remaining work |
@@ -160,24 +161,44 @@ plain swaps on the premise. Always report the same-edit-type numbers.
   shortcoming columns (H–L) and Notes.
 - `human_rating/rating_key.csv` maps items to model, pair id, gold label and flags. Raters must not open it.
 - `human_rating/README.md` holds the instructions for the team. The sheets were made by `faithfulness/build_rating_sheets.py` (needs openpyxl).
-- **State on 25 Nov:** raters 2 and 3 are complete (200/200, valid values) and sit **uncommitted** in the laptop repo
-  folder. Rater 3 ticked shortcomings on 79 rows; rater 2 ticked none. Rater 1 is empty.
-  **Don't commit or push the filled sheets until rater 1 is done:** the repo is public and rater 1 could see the
-  others' answers. Then commit, or the user hands over the files.
-- **Planned analysis:**
-  - Check validity.
-  - Inter-rater agreement: Krippendorff's α, or the authors' measure.
-  - Mean score per item.
-  - RQ2: Spearman ρ between quality and per-example faithfulness (e.g. `_drop` columns in per_example.csv,
-    `consistent`, alignment `aligned` for that pair), per example and per model.
-  - RQ3: plausible-but-unfaithful = mean score ≥ 2/3 but failing the tests. Give the rate and examples, and
-    characterise them by label, model, premise length and shortcomings.
-- A human + LLM-judge option (humans on 80 items, an LLM on many more, validated against the humans) was offered.
-  The user hasn't chosen it, and raters 2 and 3 already did all 200. Never present LLM ratings as human ones.
+- **State on 25 Nov:** all three raters are complete (200/200, valid values) and committed.
+  Rater 1 filled the sheet in Apple Numbers. Their ratings were copied unchanged into `rating_sheet_rater1.xlsx`
+  (the `.numbers` copies of raters 1 and 2 stay uncommitted on the laptop; rater 2's is identical to their xlsx).
+  Only rater 3 ticked shortcomings (79 rows); raters 1 and 2 ticked none, and nobody wrote notes.
+- **Analysis:** `python faithfulness/analyse_ratings.py --out_dir btp_results/human_rating` (needs numpy, scipy,
+  openpyxl; numbers-parser only to read a `.numbers` sheet). Writes `ratings_merged.csv` (one row per item: the 3
+  scores, mean quality, every faithfulness measure, test failures, shortcomings), `rating_analysis.json` and `report.txt`.
+- **Agreement:** Krippendorff's α = 0.45 ordinal / 0.45 interval (95% CI 0.36–0.53), moderate. Pairwise Spearman
+  0.39–0.59; exact agreement 38–44%; within one step 70–86%. Rater means 0.56 / 0.56 / 0.51.
+- **Quality (mean of 3 raters; "plausible" = mean ≥ 2/3):**
+
+  | | random nt8 | FV-k nt8 | random nt128 | FV-k nt128 |
+  |---|---|---|---|---|
+  | Mean quality | 0.42 | 0.50 | 0.69 | 0.56 |
+  | Plausible | 34% | 36% | 64% | 44% |
+
+  The sample is 50% suspect by design. Reweighting to the 2,000-pair subset's suspect rate barely changes this
+  (0.40 / 0.51 / 0.69 / 0.60). Humans prefer random nt128, even though FV-k nt128 has higher label agreement.
+- **RQ2 (pooled Spearman ρ, quality vs measure):** explanation agrees with its label +0.45; alignment rate of the
+  regenerated explanations +0.35; `suspect_unfaithful` −0.32 (all p < 0.001). The intervention-based measures are
+  about 0: remove_cited drop −0.01, cited − random drop +0.13 (CI includes 0), isolate keeps the label +0.16 (p = 0.06),
+  contradiction aligned +0.07. **Message: people reward coherent explanations, not ones the prediction actually
+  depends on.** Per-model ρ are noisy (n = 50; removal tests only apply to the ~33 non-neutral items per model).
+- **RQ3:** 89/200 plausible. 57 of them (64%) fail ≥1 test, 17 fail ≥2, and 48 fail only intervention tests
+  (not the stance check). The tests used are stance disagrees, removal-insensitive (no flip and drop < 0.05),
+  isolation loses the label, and contradiction misaligned. Report the ≥2 number too, because the ≥1 rate depends
+  on how loose the tests are. Example (FV-k nt128, quality 1.0): P "A woman with a vest and red shirt…",
+  H "…full sleeved jacket", E "vest and jacket are different garments"; deleting "vest" barely moves the prediction.
+  The shortcoming analysis rests on rater 3 alone.
+- A human + LLM-judge option was offered earlier and is no longer needed. Never present LLM ratings as human ones.
+  For the spot-check, the user asked whether Claude could fill it. Options given: an LLM-only check (labelled as
+  such), a hybrid (a human does 50 rows and Claude all 150, with agreement reported), or humans do all 150.
+  Not decided yet.
 
 ## 7. Next steps
-1. Rater 1 finishes. Then run the RQ2/RQ3 analysis (write `faithfulness/analyse_ratings.py`).
-2. Someone fills in the spot-check: `btp_results/pilot_contradiction_nt8/spotcheck_contradiction.csv` (150 rows: is the
+1. ~~RQ2/RQ3 analysis~~ (first pass done 25 Nov). Still open: an RQ2/RQ3 figure (ρ per measure with CIs, plus
+   quality per model) and choosing the final RQ3 definition (≥1 vs ≥2 failed tests).
+2. Parked by the user on 25 Nov. Someone fills in the spot-check: `btp_results/pilot_contradiction_nt8/spotcheck_contradiction.csv` (150 rows: is the
    edit natural, and the correct label). Report how often the edit is natural and how often humans agree with the oracle.
    Known oracle error example: child "sitting"→"standing" on a man's shoulders vs "standing by the man", which the oracle calls entailment.
 3. Make the contradiction figure for the report: follows cited vs control per model, raw, same edit type and swap-only.
@@ -195,7 +216,7 @@ plain swaps on the premise. Always report the same-edit-type numbers.
 - `faithfulness/stance.py` has a stray uncommitted `f` before its docstring (added by accident on 22 Nov). It is
   harmless, so don't commit it; undo it with `git checkout faithfulness/stance.py` if the user agrees.
 - Local testing: the Mac's Python 3.14 has no nltk or openpyxl.
-  - Make a venv in the scratchpad (`pip install openpyxl numpy`).
+  - Make a venv in the scratchpad (`pip install openpyxl numpy scipy numbers-parser`).
   - Without nltk, `swaps.py` falls back to the curated word groups (fine for dry runs).
   - e-SNLI test CSV: `curl` it from `raw.githubusercontent.com/OanaMariaCamburu/e-SNLI/master/dataset/esnli_test.csv`
     into `faithfulness/data/` (gitignored). urllib/nltk downloads hit an SSL certificate problem.
