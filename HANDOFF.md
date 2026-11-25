@@ -20,8 +20,8 @@
     explanation-evidence alignment, human rating, Spearman).
   - RQ1: do predictions react to the interventions? RQ2: does quality correlate with faithfulness?
     RQ3: how often are explanations plausible but unfaithful, and what characterises those cases?
-  - Ignore the plan's per-member tasks and dates. The only deadline is the **BTP-I report on 31 Dec 2026**.
-    Aim for a full draft by about 24 Dec, so the guide can review it.
+  - Ignore the plan's per-member tasks and dates. The only deadline is the **BTP-I report, due 27 Nov 2026**
+    (the user corrected this on 25 Nov; an earlier version of this file said 31 Dec, which was wrong).
 - Compute: Google Colab (T4) and Google Drive. The laptop is a Mac with no CUDA.
 - **No more Colab runs are needed.** All model runs are finished.
 
