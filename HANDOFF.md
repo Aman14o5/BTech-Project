@@ -35,7 +35,7 @@
 | Human rating sheets (200 items) | ✅ all three raters finished (200/200), committed |
 | Contradiction spot-check (150 edits) | ❌ not done yet (one person, about 1 h); parked by the user on 25 Nov |
 | RQ2 (Spearman) and RQ3 (plausible-but-unfaithful) analysis | ✅ first pass done (`faithfulness/analyse_ratings.py`, results in `btp_results/human_rating/`); see §6 |
-| RQ2/RQ3 figure | ❌ to do |
+| RQ2/RQ3 figure | ✅ `btp_results/human_rating/figures/fig08_rq2_rq3.{png,pdf}` (`faithfulness/plot_ratings.py`) |
 | Contradiction figure for the report | ❌ to do (laptop only, from committed CSVs) |
 | Findings artifact update | ❌ to do (https://claude.ai/artifact/Waz1vFSXtTSvMjMFU5L83v, last updated 12 Nov; read it before republishing to the same URL) |
 | BTP-I report | ❌ not started; the main remaining work |
@@ -78,6 +78,7 @@ Only commit or push when the user asks. The repo is **public**; the user chose t
    - `explanation_alignment`: per variant, with subsets `all` / `label_changed` / `label_kept` / `should_change`,
      plus `should_change_by_op`, `contrasts` and `contrasts_op_matched`
 8. `plots.py --run_dir` → figures fig01–07 and tables. There is **no contradiction or alignment figure yet**.
+   `plot_ratings.py --dir btp_results/human_rating` → fig08 (A: RQ2 ρ per measure with CIs; B: RQ3 plausible-but-unfaithful per model).
 
 **Alignment checks** (`alignment.py`), applied to each regenerated explanation:
 - `mentions_new`: it names the substitute word.
@@ -196,8 +197,8 @@ plain swaps on the premise. Always report the same-edit-type numbers.
   Not decided yet.
 
 ## 7. Next steps
-1. ~~RQ2/RQ3 analysis~~ (first pass done 25 Nov). Still open: an RQ2/RQ3 figure (ρ per measure with CIs, plus
-   quality per model) and choosing the final RQ3 definition (≥1 vs ≥2 failed tests).
+1. ~~RQ2/RQ3 analysis~~ (first pass done 25 Nov). Figure fig08 done too. Still open: choosing the final RQ3
+   definition (≥1 vs ≥2 failed tests).
 2. Parked by the user on 25 Nov. Someone fills in the spot-check: `btp_results/pilot_contradiction_nt8/spotcheck_contradiction.csv` (150 rows: is the
    edit natural, and the correct label). Report how often the edit is natural and how often humans agree with the oracle.
    Known oracle error example: child "sitting"→"standing" on a man's shoulders vs "standing by the man", which the oracle calls entailment.
@@ -213,8 +214,6 @@ plain swaps on the premise. Always report the same-edit-type numbers.
 6. Optional: OLMo-7B; more T5 checkpoints for a model-level correlation.
 
 ## 8. Gotchas
-- `faithfulness/stance.py` has a stray uncommitted `f` before its docstring (added by accident on 22 Nov). It is
-  harmless, so don't commit it; undo it with `git checkout faithfulness/stance.py` if the user agrees.
 - Local testing: the Mac's Python 3.14 has no nltk or openpyxl.
   - Make a venv in the scratchpad (`pip install openpyxl numpy scipy numbers-parser`).
   - Without nltk, `swaps.py` falls back to the curated word groups (fine for dry runs).
