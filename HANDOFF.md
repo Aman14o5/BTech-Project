@@ -1,122 +1,208 @@
-# Handoff: GP115 faithfulness project (as of 16 Nov 2026)
+# Handoff: GP115 faithfulness project (as of 25 Nov 2026)
 
-> **Repo layout note (for Claude Code on the web):** this copy lives at the repo root. Paths below written as `btech project/...` refer to the original laptop folder. In this repo: the research plan and other PDFs are in `docs/`, the earlier results are in `btp_results/`, and the code is in `faithfulness/`. The full e-SNLI CSV is in `data/esnli_dataset.csv.gz` (gzipped because the raw file is over 100 MB; run `gunzip -k data/esnli_dataset.csv.gz`).
+> **Where things are:** this file is at the repo root (github.com/amey75/Btech-Project, branches `main` and
+> `contradiction-intervention`, which are identical) and is also copied to the laptop folder `btech project/`.
+> In the repo: code in `faithfulness/`, results in `btp_results/`, PDFs in `docs/`, rating sheets in `human_rating/`,
+> and the full e-SNLI CSV gzipped in `data/esnli_dataset.csv.gz` (run `gunzip -k` on it).
 
 ## 1. The project
-- DTU B.Tech project GP115, "Faithfulness-Aware Self-Rationalization: Detecting When LLM Explanations Do Not Support Their Own Predictions". Team: Amey Parashar (the user), Aman Tyagi, Bhavya Goel. Guide: Mr. Rohit Beniwal.
-- The question: when a self-rationalizing NLI model gives a label and an explanation, does the label depend on the evidence the explanation cites? We edit that evidence in the input and check whether the prediction reacts, compared with matched edits to other words.
-- It builds on Yang et al., TACL 2025 ("Self-rationalization in the wild"), repo UKPLab/tacl2025-ood-eval-self-rationalization. We use the authors' released **T5-Large checkpoints trained on e-SNLI** and do no training ourselves.
-- Research plan: `Detailed_Research_Plan_GP115_corrected.pdf`.
-  - Plan Table 1 lists three interventions: removal, isolation, contradiction.
-  - Plan Table 2 lists the metrics: accuracy/macro-F1, evidence sensitivity, counterfactual correctness, explanation-evidence alignment, human rating, Spearman correlation.
-  - RQ1 asks whether predictions react to the interventions. RQ2 asks whether quality correlates with faithfulness. RQ3 asks how often explanations are plausible but unfaithful.
-  - The user says to ignore the per-member task assignments and the dates. The only date that matters is the **BTP-I report on 31 Dec 2026**.
-- Compute: Google Colab with a T4 and Google Drive. The local machine is a Mac with no CUDA.
+- DTU B.Tech project GP115, "Faithfulness-Aware Self-Rationalization: Detecting When LLM Explanations Do Not
+  Support Their Own Predictions". Team: Amey Parashar (the user), Aman Tyagi, Bhavya Goel. Guide: Mr. Rohit Beniwal.
+- The question: when a self-rationalizing NLI model gives a label and an explanation, does the label depend on the
+  evidence the explanation cites? We edit that evidence in the input and check whether the prediction (and the
+  regenerated explanation) reacts, compared with matched edits to other words.
+- It builds on Yang et al., TACL 2025 ("Self-rationalization in the wild"), repo UKPLab/tacl2025-ood-eval-self-rationalization.
+  We use the authors' released **T5-Large checkpoints trained on e-SNLI** and do no training ourselves. (The plan says we
+  would fine-tune; the report should say we used the released checkpoints.)
+- Research plan: `docs/Detailed_Research_Plan_GP115_corrected.pdf`.
+  - Table 1: interventions (removal, isolation, contradiction).
+  - Table 2: metrics (accuracy/macro-F1, evidence sensitivity, counterfactual correctness,
+    explanation-evidence alignment, human rating, Spearman).
+  - RQ1: do predictions react to the interventions? RQ2: does quality correlate with faithfulness?
+    RQ3: how often are explanations plausible but unfaithful, and what characterises those cases?
+  - Ignore the plan's per-member tasks and dates. The only deadline is the **BTP-I report on 31 Dec 2026**.
+    Aim for a full draft by about 24 Dec, so the guide can review it.
+- Compute: Google Colab (T4) and Google Drive. The laptop is a Mac with no CUDA.
+- **No more Colab runs are needed.** All model runs are finished.
 
-## 2. Where things are
+## 2. Status at a glance
+| Item | Status |
+|---|---|
+| Removal, isolation, contradiction on 4 models, full e-SNLI test set (9,824 pairs) | ✅ done, results committed |
+| Accuracy, evidence sensitivity, counterfactual correctness (plan Table 2) | ✅ done |
+| Explanation-evidence alignment (regenerated explanations, 2,000 pairs × 4 models) | ✅ done, results committed |
+| Same-edit-type ("op-matched") contradiction contrasts | ✅ in every `summary.json` |
+| Human rating sheets (200 items) | ✅ built; **raters 2 and 3 finished (200/200); rater 1 not started** |
+| Contradiction spot-check (150 edits) | ❌ not done yet (one person, about 1 h) |
+| RQ2 (Spearman) and RQ3 (plausible-but-unfaithful) analysis | ❌ waiting for rater 1 |
+| Contradiction figure for the report | ❌ to do (laptop only, from committed CSVs) |
+| Findings artifact update | ❌ to do (https://claude.ai/artifact/Waz1vFSXtTSvMjMFU5L83v, last updated 12 Nov; read it before republishing to the same URL) |
+| BTP-I report | ❌ not started; the main remaining work |
+
+## 3. Where things are
 | What | Where |
 |---|---|
-| Working code (active) | `btech project/BTech-Project/`, local branch `contradiction-intervention` |
-| Pushed to | **github.com/amey75/Btech-Project**, branch `contradiction-intervention` (latest commit `57dad4e`) |
-| Original team repo | github.com/Aman14o5/BTech-Project, branch `faithfulness-pilot` (`a03cb42`). **amey75 has no push access**; Aman can merge the branch later. |
-| Older local clone (not used) | `btech project/tacl2025-ood-eval-self-rationalization/` (origin amey75, branch `stage1-pipeline`) |
-| Results from earlier runs (laptop copy) | `btech project/btp_results/`: summary.json, per_example.csv, tables and figures. **No caches** (originals.jsonl / variant_preds.jsonl / records.jsonl). |
-| Findings page (published artifact) | https://claude.ai/artifact/Waz1vFSXtTSvMjMFU5L83v ("GP115 Faithfulness Findings"), last updated 12 Nov. Contradiction results are not in it yet. |
-| Project log written by the team | `BTech-Project/faithfulness/PROJECT_LOG.md` |
-| Colab notebook | `faithfulness/experiments_colab.ipynb`. Open it via https://colab.research.google.com/github/amey75/Btech-Project/blob/contradiction-intervention/faithfulness/experiments_colab.ipynb |
-| Checkpoints | In the user's Google Drive at `/content/drive/MyDrive/{nt8, fastvotek_nt8, random_nt128, fastvotek_nt128}`. These are shortcuts to the authors' public Drive folder and each one has config.json + pytorch_model.bin. |
-| Results on Drive | `/content/drive/MyDrive/btp_results/`. The user's Drive started empty, so all four full runs are computed fresh there. |
+| Code (active) | laptop `btech project/BTech-Project/`, local branch `contradiction-intervention`; pushed to `amey/contradiction-intervention` and `amey/main` (latest commit `335a108`, plus this handoff) |
+| Original team repo | github.com/Aman14o5/BTech-Project, branch `faithfulness-pilot` (`a03cb42`). amey75 has no push access. |
+| Old local clone (not used) | `btech project/tacl2025-ood-eval-self-rationalization/`, branch `stage1-pipeline` (already on GitHub) |
+| Results (committed) | `btp_results/<run>/`: summary.json, per_example.csv, contradiction_edits.csv, spotcheck_contradiction.csv, variant_explanations.csv, originals.jsonl, figures/, tables/. Also mirrored to laptop `btech project/btp_results/`. |
+| Large caches (Drive only) | `/content/drive/MyDrive/btp_results/<run>/`: records.jsonl (~60 MB), variant_preds.jsonl (~25 MB), variant_expl.jsonl, plus `oracle_cache/` |
+| Run folders | `t5_nt8_test_full` (random nt8), `t5_esnli_fastvotek_nt8_full`, `t5_esnli_random_nt128_full`, `t5_esnli_fastvotek_nt128_full`, `pilot_contradiction_nt8` (300-pair pilot) |
+| Checkpoints | Drive `/content/drive/MyDrive/{nt8, fastvotek_nt8, random_nt128, fastvotek_nt128}` (shortcuts to the authors' public folder) |
+| Colab notebook | `faithfulness/experiments_colab.ipynb`; https://colab.research.google.com/github/amey75/Btech-Project/blob/main/faithfulness/experiments_colab.ipynb. Cells 1–2 are setup, cell 5b is the contradiction full runs and cell 5c is alignment. Old cells 5 and 6–9 only display things; skip them. |
+| Project log written by the team | `faithfulness/PROJECT_LOG.md` (not updated this session) |
 
-Git commits are made as `amey75` with the GitHub no-reply address `142935200+amey75@users.noreply.github.com`; there is no global git identity, so pass it with `-c`. Never use the user's personal email. Only commit or push when the user asks.
+Git: commit as `amey75` with `-c user.name=amey75 -c user.email=142935200+amey75@users.noreply.github.com`
+(there is no global identity). Never use the user's personal email. Push to remote `amey` (both branches:
+`git push amey contradiction-intervention && git push amey contradiction-intervention:main`).
+Only commit or push when the user asks. The repo is **public**; the user chose that knowingly.
 
-## 3. Pipeline (`faithfulness/`)
-`run_experiment.py` handles one model per run. Each step caches to the run folder, so the run can resume after a disconnect.
-1. Generate a label and explanation for each e-SNLI test pair (9,824 pairs) → `originals.jsonl`.
-2. Find the **cited words** with `evidence.cited_indices`: content words of the premise or hypothesis that also appear in the explanation (lower-cased, light stemming, stopwords removed).
-3. Build the edited inputs (`interventions.py`), for each side (premise and hypothesis):
-   - `remove_cited` vs `remove_random` and `remove_overlap` (the overlap control removes non-cited words that also occur in the other sentence)
-   - `isolate_cited` vs `isolate_random` (premise only)
-   - `remove_gold`, `isolate_gold` and `remove_gold_random`, built from the e-SNLI human highlights (model-independent)
-   - **new:** `contradict_cited`, `contradict_random` and `contradict_gold` (section 5)
-4. Label-only scoring on every edited input → `variant_preds.jsonl`. This uses the first decoder step only and gives the same labels and probabilities as full generation.
-5. **New:** the NLI oracle labels the original pairs and every contradiction edit. Its cache is `<parent of out_dir>/oracle_cache/<model>.jsonl`, keyed by the pair text and shared by all model runs.
-6. `metrics.summarise` → `summary.json`, using paired bootstrap CIs and grouping by the **model's predicted label**. Also written: `records.jsonl`, `per_example.csv`, `contradiction_edits.csv` and `spotcheck_contradiction.csv` (150 edits; written once and never overwritten).
-7. `plots.py --run_dir` → `figures/fig01..07` plus `tables/contrasts.csv` and `tables/variants.csv`.
+## 4. Pipeline (`faithfulness/`)
+`run_experiment.py` handles one model per run. Every step caches to the run folder, so a rerun computes only what is new.
+1. Generate a label and explanation for each pair → `originals.jsonl`.
+2. Cited words (`evidence.cited_indices`): content words of the premise or hypothesis that also appear in the explanation.
+3. Edited inputs (`interventions.py`), per side:
+   - removal: `remove_cited` vs `remove_random` and `remove_overlap`
+   - isolation: `isolate_cited` vs `isolate_random` (premise only)
+   - gold versions: `*_gold` from the e-SNLI human highlights
+   - contradiction: `contradict_cited` / `_random` / `_gold`; one word is replaced via `align`, `swap_shared` or `swap` (`swaps.py`)
+4. Label-only scoring of every edit → `variant_preds.jsonl`.
+5. NLI oracle (`MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli`) gives the expected label of each
+   contradiction edit. Only edits with p ≥ 0.9 are scored. Oracle accuracy on the original pairs: 0.890 (0.921 when confident).
+6. **New: `--explain_variants N`** regenerates explanations on 8 edit types (`alignment.EXPLAIN_KEYS`) for a fixed
+   subset of N pairs. `run_experiment.explain_subset(ids, 2000, 42)` gives the same pairs for every model.
+   Output: `variant_expl.jsonl` (cache) and `variant_explanations.csv`.
+7. `metrics.summarise` → `summary.json`, with bootstrap CIs, grouped by the model's predicted label. New keys:
+   - `counterfactual_correctness.contradiction_follow_contrasts_op_matched`: same-edit-type comparison (`metrics.stratified_diff_ci`)
+   - `explanation_alignment`: per variant, with subsets `all` / `label_changed` / `label_kept` / `should_change`,
+     plus `should_change_by_op`, `contrasts` and `contrasts_op_matched`
+8. `plots.py --run_dir` → figures fig01–07 and tables. There is **no contradiction or alignment figure yet**.
 
-Other files:
-- `stance.py`: rule-based check of which label an explanation argues for. It agrees with the gold label on 88% of the human e-SNLI test explanations, and is weakest on neutral (76%).
-- `build_dataset.py`: the model-independent gold edit set.
-- `predictors.py`: T5Predictor, NLIOracle, and dummy stand-ins for `--dry_run`.
-- `swaps.py`: word substitutions for the contradiction edits (section 5).
+**Alignment checks** (`alignment.py`), applied to each regenerated explanation:
+- `mentions_new`: it names the substitute word.
+- `cites_absent`: it names a word the edit took away.
+- `consistent`: `stance()` agrees with the new label.
+- `aligned` = consistent AND NOT cites_absent, plus mentions_new for contradiction edits.
 
-Model input/output format: input `explain nli hypothesis: {h} premise: {p}`, output `{label} explanation: {text}`. "nt8" means 8 examples **per label**, so 24 in total; nt128 means 384. The training sets are in `samples/esnli/{random,fastvotek}/sub_0/{8,128}/train_select.json`.
+Other files: `stance.py` (rule-based stance; 88% on human explanations, weakest on neutral), `build_dataset.py`,
+`predictors.py` (T5Predictor, NLIOracle and dry-run dummies), `build_rating_sheets.py` (new).
 
-## 4. Results so far (four models, full e-SNLI test set; removal and isolation only)
-Models: T5-Large trained on e-SNLI, {random, FastVote-k} × {nt8, nt128}. Run folders: `t5_nt8_test_full` (random nt8), `t5_esnli_fastvotek_nt8_full`, `t5_esnli_random_nt128_full`, `t5_esnli_fastvotek_nt128_full`.
+Model I/O: input `explain nli hypothesis: {h} premise: {p}` → output `{label} explanation: {text}`.
+"nt8" = 8 examples per label (24 in total); nt128 = 384.
+
+## 5. Results (all four models, full test set)
+Baseline and removal/isolation (unchanged from the earlier runs):
 
 | Measure | random nt8 | FV-k nt8 | random nt128 | FV-k nt128 |
 |---|---|---|---|---|
 | Accuracy | 85.6% | 86.8% | 84.9% | 87.0% |
 | Explanation agrees with own label (human 88%) | 63.3% | 72.0% | 86.4% | 89.7% |
 | Premise removal, cited minus random (flip rate) | +0.201 | +0.259 | +0.236 | +0.279 |
-| Contradiction preds: cited premise removal | +0.075 | +0.165 | +0.343 | +0.270 |
-| Contradiction preds: gold premise removal | +0.320 | +0.359 | +0.381 | +0.359 |
+| Removal → entailment moves away, cited/random | 70%/24% | 85%/24% | 59%/20% | 73%/17% |
+| Isolation keeps contradiction label, cited/random/gold | 58/67/93% | 62/60/90% | 78/41/84% | 80/50/91% |
 | Entailment: hypothesis cited vs overlap | +0.002 | −0.006 | −0.017 | +0.007 |
 
-Findings:
-1. All four models have about the same accuracy, but how often the explanation agrees with its own label varies by 27 points.
-2. Cited words matter more than random words in every model.
-3. With nt8, contradiction explanations name the wrong evidence. The model does use the gold evidence; the explanation cites other words. Example: pool vs ocean, where random nt8 cites "child".
-4. Neutral explanations are the least consistent: only 33% for random nt8.
-5. On the hypothesis side, entailment explanations do no better than other shared words (about 0 in all four models).
-6. 8 → 128 examples helps much more than random → FastVote-k.
+**Contradiction (RQ1):** the model follows an edit that should change the label.
 
-## 5. Evidence contradiction (new this session; code done, full runs in progress)
-- **The edit:** replace ONE evidence word, so the sentence stays grammatical. The first possible operation is used:
-  - `align`: the word clashes with a word in the other sentence, so copy that word in (premise "pool" → "ocean").
-  - `swap_shared`: the word occurs in both sentences, so replace it with an incompatible word (man → woman).
-  - `swap`: any other evidence word, replaced with an incompatible word.
+| Premise contradiction | random nt8 | FV-k nt8 | random nt128 | FV-k nt128 |
+|---|---|---|---|---|
+| Follows, cited / control | 83% / 58% | 87% / 54% | 64% / 42% | 80% / 60% |
+| Raw difference | +0.25 | +0.33 | +0.22 | +0.19 |
+| **Same edit type (report this)** | +0.03 | +0.06 | +0.09 | +0.04 |
+| Plain `swap` edits only | +0.20 | +0.28 | +0.14 | +0.29 |
+| Gold edit, follows | 77% | 78% | 65% | 76% |
 
-  The control uses the same operation on a non-cited word when possible. The code fixes a/an and singular/plural after the swap.
-- **Substitutes** (`swaps.py`):
-  - Curated groups: gender, age, colours, numbers, posture, place/time, common adjectives, common animals.
-  - WordNet noun siblings, restricted to concrete nouns: the word must be mainly a common noun, its main sense must be concrete, and the substitute must occur at least 3 times in the e-SNLI test split. People are handled only by the curated groups. Acts count only if they are sports, games or dances.
-  - The `align` relation also accepts WordNet cousins (path distance ≤ 3, lowest common hypernym depth ≥ 3), which is what makes pool/ocean match.
-  - Known noise: compound nouns ("lawn mower" → "campus mower"), phrasal verbs ("sleeps down"), and a few odd cousin pairs (air/foot, home/field, instrument/key).
-- **The expected label comes from the oracle, not from rules.** The oracle is `MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli`. Only edits where the oracle is confident (p ≥ 0.9, `--oracle_min_conf`) are scored. Its accuracy on the original pairs is reported in `summary.json["oracle"]`.
-- **Metrics** (`summary["counterfactual_correctness"]`):
-  - Contradiction: `oracle_changes_label` (the edit should change the label), `follows_when_should_change`, `stays_when_should_stay`, `correct`, and `contradiction_follow_contrasts` (follows, cited minus random, unpaired bootstrap).
-  - Two new paired flip contrasts in `CONTRASTS`: "premise/hypothesis contradiction vs random".
-  - Removal: strict (moves to neutral) and lenient (moves away), computed for entailment and contradiction predictions.
-  - Isolation: label kept.
-- **Validation:**
-  - Local dry runs pass.
-  - Rerunning an existing run folder computes only the new edits.
-  - Local oracle test: 89% accuracy on 200 original pairs.
-  - About 33 of 40 gold edits read cleanly on manual reading.
-  - The gold set has about 9,500 contradiction edits.
-- **Colab pilot** (random nt8, 300 pairs, folder `btp_results/pilot_contradiction_nt8`):
-  - Accuracy 0.853, matching the original pilot.
-  - Oracle accuracy 0.877 (0.909 when confident).
-  - Premise side: the model follows 84% of cited edits vs 53% of control edits, i.e. **+0.318 [+0.13, +0.49]**.
-  - Hypothesis side: +0.015, CI includes 0. This is consistent with Finding 5: explanations cite almost every hypothesis word, so few control words are left.
-  - Oracle says the label should change for 48% of cited edits vs 23% of control edits.
-  - The pilot exposed one bug: old/elderly were treated as incompatible. Fixed in `57dad4e`.
-- **Current state:** the user is running the 5b "Full runs" cell on Colab for all four models (estimated 20–30 min each, computed fresh). The old notebook cell "5. Run the experiment (--n 2000)" and the old cells 6–9 should be skipped.
+On the hypothesis side the difference is about 0 to +0.07 (same as Finding 5).
 
-## 6. Next steps
-1. When the full runs finish, read the four `summary.json` files. Add the contradiction results (follows / stays / should change, cited vs control, per label) and counterfactual correctness for removal and isolation to the findings artifact (read it first, then republish to the same URL).
-2. Hand spot-check: the team labels `pilot_contradiction_nt8/spotcheck_contradiction.csv` (150 rows: is the edit natural, which label is right). Then report how often the edit and the oracle are right.
-3. Regenerate explanations on the edited inputs, for a subset of about 2,000 pairs × removal, isolation and contradiction × 4 models. This gives the plan's **explanation-evidence alignment** metric: the new explanation mentions the changed word and argues for the new label (via `stance()`). It is not implemented yet. Proposed option: `--explain_variants N` with its own cache file `variant_expl.jsonl`.
-4. RQ2 (quality vs faithfulness). The repo's `human_eval/` folder has 1,080 explanations, each rated by 3 annotators on Yes / Weakly Yes / Weakly No / No. They cover SICK, VitaminC and XSum (not e-SNLI): T5 trained on e-FEVER, and OLMo on both datasets. Option A: run the faithfulness tests on those rated instances. Option B: rate about 50 of our e-SNLI explanations per model ourselves and compute Spearman's ρ against per-example faithfulness, e.g. the `_drop` columns.
-5. Optional:
-   - More T5 checkpoints (nt16/32/64, other selection strategies) to get enough models for a model-level correlation.
-   - OLMo-7B. `load_custom_dataset.py` was reconstructed and its prompt is a guess; recover the real prompt from the authors' released OLMo outputs.
-   - RQ3: logistic regression on `suspect_unfaithful`.
-6. BTP-I report due 31 Dec 2026.
+**The confound:** cited edits are about 85% `swap_shared` (followed 85–90% whatever word is edited); control edits
+are about 45% plain `swap` (followed 21–30%). The raw gap is therefore mostly edit-type mix. The robust signal is
+plain swaps on the premise. Always report the same-edit-type numbers.
 
-## 7. Gotchas
-- Local testing used a venv with nltk, WordNet, torch and transformers in the session scratchpad, which will be gone. The Mac's Python 3.14 has an SSL certificate problem with `nltk.download`; download `wordnet.zip` with curl from `raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip` into `nltk_data/corpora/`, then `chmod -R go-w` the folder. Set `NLTK_DATA`. e-SNLI test CSV: `raw.githubusercontent.com/OanaMariaCamburu/e-SNLI/master/dataset/esnli_test.csv`.
-- Colab: every cell now `%cd`s or `os.chdir`s to `/content/BTech-Project`, because a session restart resets the folder to `/content`. Cell 1 no longer installs protobuf, since reinstalling it can trigger a restart.
-- Removal and isolation keys and seeds are unchanged, so old caches stay valid. Contradiction edits use their own random seed (`"{seed}-{id}-{side}-contradict"`), and the substitution vocabulary always comes from the whole split, so edits do not depend on `--n`.
-- The user prefers explanations in plain language, with real examples from the CSVs.
+**Explanation-evidence alignment** (regenerated explanations, about 1,950–1,980 usable pairs per model):
+
+| | random nt8 | FV-k nt8 | random nt128 | FV-k nt128 |
+|---|---|---|---|---|
+| Premise contradiction aligned, cited / control | 47% / 9% | 49% / 13% | 64% / 22% | 67% / 16% |
+| Same-edit-type difference | +0.30 | +0.11 (CI includes 0) | +0.16 | +0.24 |
+| **Uncited premise word flipped the label → new explanation names it** | 46% | 44% | 71% | 68% |
+| Cited edit, label kept → explanation still names the new word (copying) | 67% | 53% | 73% | 72% |
+| Consistent after removal (remove_cited) | 49% | 52% | 75% | 81% |
+| Explanation still cites a deleted word (remove_cited) | 3.5% | 5.3% | 4.2% | 2.0% |
+
+**Caveats:**
+- `mentions_new` is partly copying. Example: car→motorcycle, the label stays entailment, and the explanation becomes
+  "a motorcycle is loaded with items on the top".
+- The cleanest alignment number is the "uncited word flipped the label" row, taken from the `label_changed` subset.
+- Word matching undercounts indirect references (outside→inside explained as "cannot be playing music outdoors"),
+  so those numbers are lower bounds.
+
+**Findings so far:**
+1. All four models have about the same accuracy, but explanation-label agreement varies by 27 points.
+2. Cited words matter more than random words for removal and isolation in every model.
+3. With nt8, contradiction explanations cite the wrong evidence: isolating the cited words keeps the label no more
+   often than random words, while the gold words keep it 90%+ of the time (example: pool vs ocean, where random nt8 cites "child").
+4. Neutral explanations are the least consistent.
+5. On the hypothesis side, entailment explanations do no better than other shared words.
+6. Going from 8 to 128 examples helps much more than random → FastVote-k.
+7. **New:** in contradiction, the raw cited-vs-control gap is mostly edit-type mix. A real but smaller effect remains
+   on premise plain swaps.
+8. **New:** when an uncited word changes the decision, nt8 explanations name it less than half the time and often
+   invent another reason (children→adults flips the label to contradiction; the explanation says "the project cannot be a model").
+   nt128 does better (about 70%). This is good RQ3 material.
+9. **New:** random nt128 is the least reactive model (it follows 64% of edits that should change the label, vs 80–87% for the others).
+
+## 6. Human rating (RQ2/RQ3)
+- `human_rating/rating_sheet_rater{1,2,3}.xlsx`: the same 200 items, each in a different order, with dropdowns.
+  50 per model, different pairs for each model, all from the 2,000-pair alignment subset, stratified by predicted
+  label and `suspect_unfaithful` (25 suspect per model).
+- Same task as Yang et al. (copied from `tacl2025-ood-eval-self-rationalization/human_eval/exp_eval2/`): "Does the
+  explanation justify the given relationship?" Yes / Weakly Yes / Weakly No / No → 1, 2/3, 1/3, 0. Plus 5 optional
+  shortcoming columns (H–L) and Notes.
+- `human_rating/rating_key.csv` maps items to model, pair id, gold label and flags. Raters must not open it.
+- `human_rating/README.md` holds the instructions for the team. The sheets were made by `faithfulness/build_rating_sheets.py` (needs openpyxl).
+- **State on 25 Nov:** raters 2 and 3 are complete (200/200, valid values) and sit **uncommitted** in the laptop repo
+  folder. Rater 3 ticked shortcomings on 79 rows; rater 2 ticked none. Rater 1 is empty.
+  **Don't commit or push the filled sheets until rater 1 is done:** the repo is public and rater 1 could see the
+  others' answers. Then commit, or the user hands over the files.
+- **Planned analysis:**
+  - Check validity.
+  - Inter-rater agreement: Krippendorff's α, or the authors' measure.
+  - Mean score per item.
+  - RQ2: Spearman ρ between quality and per-example faithfulness (e.g. `_drop` columns in per_example.csv,
+    `consistent`, alignment `aligned` for that pair), per example and per model.
+  - RQ3: plausible-but-unfaithful = mean score ≥ 2/3 but failing the tests. Give the rate and examples, and
+    characterise them by label, model, premise length and shortcomings.
+- A human + LLM-judge option (humans on 80 items, an LLM on many more, validated against the humans) was offered.
+  The user hasn't chosen it, and raters 2 and 3 already did all 200. Never present LLM ratings as human ones.
+
+## 7. Next steps
+1. Rater 1 finishes. Then run the RQ2/RQ3 analysis (write `faithfulness/analyse_ratings.py`).
+2. Someone fills in the spot-check: `btp_results/pilot_contradiction_nt8/spotcheck_contradiction.csv` (150 rows: is the
+   edit natural, and the correct label). Report how often the edit is natural and how often humans agree with the oracle.
+   Known oracle error example: child "sitting"→"standing" on a man's shoulders vs "standing by the man", which the oracle calls entailment.
+3. Make the contradiction figure for the report: follows cited vs control per model, raw, same edit type and swap-only.
+   Possibly an alignment figure too.
+4. Update the findings artifact with the contradiction and alignment results (read it first, republish to the same URL).
+5. **BTP-I report** (main job). The introduction, related work, method and RQ1 results can be written now.
+   - Related work: add Atanasova et al. (ACL 2023, "Faithfulness Tests for Natural Language Explanations"), which is
+     close to our contradiction + alignment test. Also consider Turpin et al. 2023, Lanham et al. 2023 and Parcalabescu & Frank 2024.
+     These were cited from memory, so verify the details.
+   - Soften the plan's claim "none of the reviewed works tests…" ([3] Wiegreffe et al. tests label–rationale association).
+   - Say we used the released checkpoints, not our own fine-tuning.
+6. Optional: OLMo-7B; more T5 checkpoints for a model-level correlation.
+
+## 8. Gotchas
+- `faithfulness/stance.py` has a stray uncommitted `f` before its docstring (added by accident on 22 Nov). It is
+  harmless, so don't commit it; undo it with `git checkout faithfulness/stance.py` if the user agrees.
+- Local testing: the Mac's Python 3.14 has no nltk or openpyxl.
+  - Make a venv in the scratchpad (`pip install openpyxl numpy`).
+  - Without nltk, `swaps.py` falls back to the curated word groups (fine for dry runs).
+  - e-SNLI test CSV: `curl` it from `raw.githubusercontent.com/OanaMariaCamburu/e-SNLI/master/dataset/esnli_test.csv`
+    into `faithfulness/data/` (gitignored). urllib/nltk downloads hit an SSL certificate problem.
+  - Dry run: `python3 faithfulness/run_experiment.py --dry_run --n 300 --explain_variants 50 --out_dir <scratch>`.
+- Colab: every cell `%cd`s to `/content/BTech-Project` (a restart resets the folder). Cell 1 pulls `contradiction-intervention`.
+  Results go straight to Drive; a disconnect mid-run is fine, since rerunning resumes from the caches.
+- Getting results off Colab: zip only the small files on Drive, then download (records.jsonl is about 60 MB per run and is not needed locally).
+- Removal and isolation keys and seeds never changed, so old caches stay valid. Contradiction edits use their own seed;
+  the substitution vocabulary always comes from the whole split.
+- The user prefers plain-language explanations with real examples from the CSVs, and short answers.
