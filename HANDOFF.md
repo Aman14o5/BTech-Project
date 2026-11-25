@@ -43,7 +43,7 @@
 ## 3. Where things are
 | What | Where |
 |---|---|
-| Code (active) | laptop `btech project/BTech-Project/`, local branch `contradiction-intervention`; pushed to `amey/contradiction-intervention` and `amey/main` (latest commit `335a108`, plus this handoff) |
+| Code (active) | laptop `btech project/BTech-Project/`, local branch `contradiction-intervention`; pushed to `amey/contradiction-intervention` and `amey/main` (latest commit `b3a1788`) |
 | Original team repo | github.com/Aman14o5/BTech-Project, branch `faithfulness-pilot` (`a03cb42`). amey75 has no push access. |
 | Old local clone (not used) | `btech project/tacl2025-ood-eval-self-rationalization/`, branch `stage1-pipeline` (already on GitHub) |
 | Results (committed) | `btp_results/<run>/`: summary.json, per_example.csv, contradiction_edits.csv, spotcheck_contradiction.csv, variant_explanations.csv, originals.jsonl, figures/, tables/. Also mirrored to laptop `btech project/btp_results/`. |
